@@ -1,0 +1,24 @@
+<SigninWindow>:
+    orientation: "vertical"
+    spacing: 10
+
+    BoxLayout:
+        size_hint_y: None
+        height: 50
+        Label:
+            text: "Contrôle d’accès"
+            bold: True
+            size_hint_x: .9
+        
+        Button:
+            text: "x"
+            size_hint_x: .1
+
+    BoxLayout:
+        orientation: "vertical"
+        TextInput:
+            hint_text: "Nom D'utilisateur"
+        TextInput:
+            hint_text: "Mot De Passe"
+        Button:
+            text: "Connexion"
