@@ -4,7 +4,7 @@
     id: main_win
     orientation: "vertical"
     spacing: 10
-    space_x: self.size[0]/3
+    space_x: self.size[0]/3.5
     canvas.before:
         Color:
             rgb: (0.925, 0.925, 0.925)
@@ -31,8 +31,12 @@
             size_hint_x: .1
     BoxLayout:
         orientation: "vertical"
-        padding: main_win.space_x-10, 10
+        padding: main_win.space_x-10, 20
         #spacing:20
+
+        Image:
+            source: './assets/logo.jpg'
+
         BoxLayout:
             orientation: "vertical"
             spacing: 10
