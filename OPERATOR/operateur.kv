@@ -78,11 +78,14 @@
                         pos: self.pos
                     
                 FlatButton:
+                    text: 'Réf'
+                    size_hint_x: .3
+                FlatButton:
                     text: 'Qté'
                     size_hint_x: .1
                 FlatButton:
-                    text: 'Réf'
-                    size_hint_x: .3
+                    text: 'Prix'
+                    size_hint_x: .1
                 FlatButton:
                     text: 'Réd'
                     size_hint_x: .1
@@ -91,9 +94,6 @@
                     size_hint_x: .1
                 FlatButton:
                     text: 'TVA'
-                    size_hint_x: .1
-                FlatButton:
-                    text: 'Prix'
                     size_hint_x: .1
                 FlatButton:
                     text: 'Totale'
@@ -105,14 +105,18 @@
                 height: 30
                 spacing: 5
                 TextInput:
-                    id: qty_inp
-                    size_hint_x: .1
-                    multiline: False
-                TextInput:
                     id: code_inp
                     size_hint_x: .3
                     multiline: False
                     on_text_validate: root.update_purchases()
+                TextInput:
+                    id: qty_inp
+                    size_hint_x: .1
+                    multiline: False
+                TextInput:
+                    id: price_inp
+                    size_hint_x: .1
+                    multiline: False
                 TextInput:
                     id: disc_inp
                     size_hint_x: .1
@@ -125,10 +129,7 @@
                     id: vat_inp
                     size_hint_x: .1
                     multiline: False
-                TextInput:
-                    id: price_inp
-                    size_hint_x: .1
-                    multiline: False
+                
                 TextInput:
                     id: total_inp
                     size_hint_x: .2
@@ -136,6 +137,7 @@
             BoxLayout:
                 id: add_to_cart
                 orientation: 'vertical'
+                spacing: 5
                 BoxLayout:
                     size_hint_y: None
                     height: 30
@@ -146,37 +148,49 @@
                             size: self.size
                             pos: self.pos
                     Label:
-                        text: 'Image'
-                        size_hint_x: .1
+                        text: '  Image  '
+                        size_hint_x: .3/2
                     Label:
                         text: 'Réf'
-                        size_hint_x: .3
-                    Label:
-                        text: 'Désignation'
-                        size_hint_x: .3
+                        size_hint_x: .2
                     Label:
                         text: 'Qté'
                         size_hint_x: .1
                     Label:
+                        text: 'Désignation'
+                        size_hint_x: .6
+                    Label:
+                        text: 'Prix'
+                        size_hint_x: .2
+                    Label:
                         text: 'Réd'
                         size_hint_x: .1
                     Label:
-                        text: 'Prix'
-                        size_hint_x: .1
-                    Label:
                         text: 'Totale'
-                        size_hint_x: .1
+                        size_hint_x: .2
                 GridLayout:
-                    height: 500
                     id: products
                     cols: 1
+                    spacing: 15
         BoxLayout:
             id: preview
             orientation: 'vertical'
-            size_hint_x: .2
-
+            size_hint_x: .3
 
             TextInput:
                 id: receipt_preview
                 readonly: True
-                text: "Mr. Abdelatif Store\nReçu No: ****\nDate & Heure: ****\nICE : 000000000\nRC : 0000000000\nIF : 0000000000\nTél :0619666722\nEmail: yaseentechguy@gmail.com\n"
+                text: "Bienvenue Chez\nMr. Abdelatif Store !\n\nReçu N°: ********\nDate: 24-10-2022\n\n315 Rue Anywhere\n80000 AlWifaq, Agadir\n0619666722\nyassine.e@aol.com\n\n"
+
+    BoxLayout:
+        id: footer
+        size_hint_y:None
+        height: 30
+        canvas.before:
+            Color:
+                rgba: (.06, .47, .47, 1)
+            Rectangle:
+                pos: self.pos
+                size: self.size
+        Label:
+            text: "Created By Yassine El Haddad - 0619666722 - yaseentechguy@gmail.com"
