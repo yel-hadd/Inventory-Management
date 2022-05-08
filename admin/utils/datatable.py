@@ -45,7 +45,7 @@ class DataTable(BoxLayout):
         table_data = []
         for t in col_titles:
             if  t == 'designation':
-                table_data.append({'text':str(t), 'size_hint_y':None, 'size_hint_x':3, 'height':50, 'bcolor':(.06,.45, .45, 1)})
+                table_data.append({'text':str(t), 'size_hint_y':None, 'size_hint_x':5, 'height':50, 'bcolor':(.06,.45, .45, 1)})
             else:
                 table_data.append({'text':str(t), 'size_hint_y':None, 'height':50, 'bcolor':(.06,.45, .45, 1)})
 

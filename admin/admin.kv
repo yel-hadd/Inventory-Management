@@ -40,7 +40,7 @@
                         height: 30
 
         Label:
-            text: 'Portail Administrateur'
+            text: 'Mr. Abdelatif Store | Portail Administrateur'
             bold: True
             size_hint: (.9, None)
             height: 30
@@ -51,7 +51,7 @@
 
         BoxLayout:
             id:nav_tabs
-            size_hint_x: .2
+            size_hint_x: .1
             orientation: 'vertical'
             canvas.before:
                 Color:
@@ -105,7 +105,7 @@
                 id: sp
                 text: ''
                 size_hint_y: .4
-        
+            
         BoxLayout:
             id: all_content
             size_hint_x: .8
@@ -132,21 +132,77 @@
                             height: 45
                             Button:
                                 id: crud_add
-                                text: "Ajouter"
+                                text: "Ajouter Utilisateur"
                                 on_release: root.add_user_fields()
+                                background_color: (.06, .45, .45, 1)
+                                background_normal: ''
                             Button:
                                 id: crud_update
-                                text:  'Modifier'
+                                text:  'Modifier Utilisateur'
                                 on_release: root.update_user_fields()
+                                background_color: (.06, .45, .45, 1)
+                                background_normal: ''
                             Button:
                                 id: crud_remove
-                                text:  'Supprimer'
+                                text:  'Supprimer Utilisateur'
                                 on_release: root.remove_user_fields()
-                        
-
+                                background_color: (.06, .45, .45, 1)
+                                background_normal: ''
                 Screen:
                     id: scrn_product_content
                     name:  'scrn_product_content'
+                    BoxLayout:
+                        orientation: "vertical"
+                        spacing: 10
+                        BoxLayout:
+                            id: scrn_product_contents
+                        GridLayout:
+                            id: ops_fields_p
+                            cols: 9
+                            spacing: 5
+                            size_hint_y: None
+                            height: 70
+                        BoxLayout:
+                            id: ops_btns_p
+                            spacing: 10
+                            size_hint_y: None
+                            height: 45
+                            Button:
+                                id: crud_add_p
+                                text: "Ajouter Produit"
+                                on_release: root.add_product_fields()
+                                background_color: (.06, .45, .45, 1)
+                                background_normal: ''
+                            Button:
+                                id: crud_update_p
+                                text:  'Modifier Produit'
+                                on_release: root.update_product_fields()
+                                background_color: (.06, .45, .45, 1)
+                                background_normal: ''
+                            Button:
+                                id: crud_remove_p
+                                text:  'Supprimer Produit'
+                                on_release: root.remove_product_fields()
+                                background_color: (.06, .45, .45, 1)
+                                background_normal: ''
+                            Button:
+                                id: crud_export_bulk
+                                text: "Imprimer Ticket"
+                                on_release: root.add_product_fields()
+                                background_color: (.06, .45, .45, 1)
+                                background_normal: ''
+                            Button:
+                                id: crud_export_bulk
+                                text: "Exporter Excel"
+                                on_release: root.add_product_fields()
+                                background_color: (.06, .45, .45, 1)
+                                background_normal: ''
+                            Button:
+                                id: crud_add_bulk
+                                text: "Importer Excel"
+                                on_release: root.add_product_fields()
+                                background_color: (.06, .45, .45, 1)
+                                background_normal: ''
                 Screen:
                     id: content
                     name:  'scrn_order_content'

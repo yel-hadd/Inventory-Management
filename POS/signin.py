@@ -9,7 +9,7 @@ class SigninWindow(BoxLayout):
         user = self.ids.username_field
         pwd = self.ids.pwd_field
         info = self.ids.info
-
+        
         username = user.text
         password = pwd.text
 
