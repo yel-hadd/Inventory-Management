@@ -1,4 +1,3 @@
-from turtle import bgcolor, title
 from kivy.app import App
 from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.label import Label
@@ -6,13 +5,22 @@ from kivy.uix.image import Image
 from kivy.uix.textinput import TextInput
 from kivy.uix.button import Button
 from kivy.uix.spinner import Spinner
-from kivy.uix.popup import Popup
 from kivy.uix.modalview import ModalView
 from kivy.uix.boxlayout import BoxLayout
 from pymongo import MongoClient
 from utils.datatable import DataTable
 from datetime import datetime
 import hashlib
+import openpyxl
+import tkinter.filedialog
+from datetime import datetime
+
+
+# IMPORTER EXCEL
+# EXPORTER EXCEL
+# COMMANDE  SCREEN
+# CALCULATOR
+
 
 class AdminWindow(BoxLayout):
     # Add screen size to get_products(self)
@@ -44,7 +52,7 @@ class AdminWindow(BoxLayout):
         error_msg = Label(text=f'champ obligatoire ({field}) manquant', bold=True)
         
         
-        popup = ModalView(size_hint=(None, None), size=(400, 200))
+        popup = ModalView(size_hint=(None, None), size=(400, 300))
         box.add_widget(error_img)
         box.add_widget(error_msg)
         
@@ -60,7 +68,7 @@ class AdminWindow(BoxLayout):
         error_img = Image(source='./utils/1.png', size=(150, 150))
         error_msg = Label(text=f'{message}', bold=True)
         
-        popup = ModalView(size_hint=(None, None), size=(400, 200))
+        popup = ModalView(size_hint=(None, None), size=(400, 300))
         box.add_widget(error_img)
         box.add_widget(error_msg)
         
@@ -77,7 +85,7 @@ class AdminWindow(BoxLayout):
         error_msg = Label(text=f'{operation} avec succès', bold=True)
         
         
-        popup = ModalView(size_hint=(None, None), size=(300, 200))
+        popup = ModalView(size_hint=(None, None), size=(400, 300))
         box.add_widget(error_img)
         box.add_widget(error_msg)
         
@@ -228,10 +236,177 @@ class AdminWindow(BoxLayout):
         return _stocks
     
     
-    def add_product_fields(self):
+    def export_xlsx(self, enstock=False):
+        path = tkinter.filedialog.askdirectory()
+        if path == '':
+            return 0
+        client = MongoClient()
+        db = client.pos
+        products = db.stocks
+        _stocks = {}
+
+        _stocks['Ref'] = {}
+        _stocks['marque'] = {}
+        _stocks['modele'] = {}
+        _stocks['cpu'] = {}
+        _stocks['ram'] = {}
+        _stocks['stockage'] = {}
+        _stocks['gpu'] = {}
+        _stocks['batterie'] = {}
+        _stocks['prix'] = {}
+        _stocks['prix_achat'] = {}
+        _stocks['en_stock'] = {}
+        _stocks['vendu'] = {}
+        _stocks['commande'] = {}
+        _stocks['dernier_achat'] = {}
+
+        Ref = []
+        prix = []
+        prix_achat = []
+        marque = []
+        modele = []
+        cpu = []
+        ram = []
+        gpu = []
+        stockage = []
+        batterie = []
+        en_stock = []
+        vendu = []
+        commande = []
+        dernier_achat = []
+
+        for product in products.find():
+            Ref.append(product['Ref'])
+            prix.append(product['prix'])
+            try:
+                prix_achat.append(product['prix_achat'])
+            except KeyError:
+                prix_achat.append('')
+            marque.append(product['marque'])
+            modele.append(product['modele'])
+            cpu.append(product['cpu'])
+            ram.append(product['ram'])
+            gpu.append(product['gpu'])
+            stockage.append(product['stockage'])
+            batterie.append(product['batterie'])
+            try:    
+                en_stock.append(product['en_stock'])
+            except KeyError:
+                en_stock.append('')
+
+            try:    
+                vendu.append(product['vendu'])
+            except KeyError:
+                vendu.append('')
+
+            commande.append(product['commande'])
+
+            try:    
+                dernier_achat.append(product['dernier_achat'])
+            except KeyError:
+                dernier_achat.append('')
+
+
+        for c, v in enumerate(Ref):
+            _stocks['Ref'][c] = Ref[c]
+
+            _stocks['modele'][c] = modele[c]
+            _stocks['marque'][c] = marque[c]
+            _stocks['cpu'][c] = cpu[c]
+            _stocks['ram'][c] = ram[c]
+            _stocks['stockage'][c] = stockage[c]
+            _stocks['gpu'][c] = gpu[c]
+            _stocks['batterie'][c] = batterie[c]
+
+            _stocks['prix'][c] = prix[c]
+            _stocks['prix_achat'][c] = prix_achat[c]
+            _stocks['en_stock'][c] = en_stock[c]
+            _stocks['vendu'][c] = vendu[c]
+            _stocks['commande'][c] = commande[c]
+            _stocks['dernier_achat'][c] = dernier_achat[c]
+
+        titles = _stocks.keys()
+        titles = list(titles)
+
+        titles2 = ['Réf', 'Marque', 'Modèle', 'CPU', 'RAM', 'Stockage', 'GPU', 'Batterie',
+              'Prix', "Prix d'achat", 'En Stock', 'Vendu', 'Commande', 'Dernier Achat']
+
+        product = []
+        all_products = []
+
+        for c, v in enumerate(_stocks['Ref']):
+            product.append(_stocks[titles[0]][c])
+            product.append(_stocks[titles[1]][c])
+            product.append(_stocks[titles[2]][c])
+            product.append(_stocks[titles[3]][c])
+            product.append(_stocks[titles[4]][c])
+            product.append(_stocks[titles[5]][c])
+            product.append(_stocks[titles[6]][c])
+            product.append(_stocks[titles[7]][c])
+            product.append(_stocks[titles[8]][c])
+            product.append(_stocks[titles[9]][c])
+            product.append(int(_stocks[titles[10]][c]))
+            product.append(_stocks[titles[11]][c])
+            product.append(_stocks[titles[12]][c])
+            product.append(_stocks[titles[13]][c])
+            all_products.append(product)
+            product = []
+
+
+        if enstock == True:   
+            filename = '/en-stock-'
+            filtered = []
+            for i in all_products:
+                if i[10] >= 1:
+                    filtered.append(i)
+            all_products = filtered
+        else:
+            filename = '/tous-'
+
+        all_products.insert(0, titles2)
+
+        wb = openpyxl.Workbook()
+        ws_write = wb.worksheets[0]
+
+        for p in all_products:
+            ws_write.append(p)
+
+        today = datetime.today().strftime("%d-%m-%Y")
+        wb.save(filename=f'{path}{filename}{today}.xlsx')
+        
+        if enstock:
+            self.success_popup('les produits en stock ont été exportés')
+        else:
+            self.success_popup('Tous les produits ont été exportés')
+        
+        return 0
+
+    
+    def export_excel_fields(self):
         target = self.ids.ops_fields_p
         target.clear_widgets()
         
+
+        crud_export_instock =  Button(text='Exporter Les Produits En Stock', size_hint_x=1/8, width=100,
+                                      on_release=lambda x: self.export_xlsx(True),background_color=(0.184, 0.216, 0.231), background_normal='')
+        
+        crud_export_all =  Button(text='Exporter Tous Les Produits', size_hint_x=1/8, width=100,
+                                  on_release=lambda x: self.export_xlsx(),background_color=(0.184, 0.216, 0.231), background_normal='')
+        
+        crud_close_p =  Button(text='Fermer', size_hint_x=1/8, width=100,
+                               on_release=lambda x: self.ids.ops_fields_p.clear_widgets(),
+                               background_color=(0.184, 0.216, 0.231), background_normal='')
+        
+        target.add_widget(crud_export_instock)
+        target.add_widget(crud_export_all)
+        target.add_widget(crud_close_p)
+        
+        return 0
+  
+    
+    def add_product_fields(self):
+        target = self.ids.ops_fields_p
+        target.clear_widgets()
         
         crud_code = TextInput(hint_text='Réf', multiline=False)
         crud_marque = TextInput(hint_text='Marque', multiline=False)
@@ -248,10 +423,15 @@ class AdminWindow(BoxLayout):
         crud_order = TextInput(hint_text='Commande', multiline=False)
         crud_last_purchase = TextInput(hint_text='Dernier Achat', multiline=False)
         crud_submit_p =  Button(text='Ajouter Produit', size_hint_x=1/8, width=100,
-                                on_release=lambda x:self.add_product(crud_code.text, crud_marque.text, crud_modele.text, crud_cpu.text, crud_ram.text, crud_gpu.text, crud_stockage.text, crud_batterie.text, crud_price.text, crud_buy_price.text, crud_stock.text, crud_sold.text, crud_order.text, crud_last_purchase.text))
+                                on_release=lambda x:self.add_product(crud_code.text, crud_marque.text,
+                                                                     crud_modele.text, crud_cpu.text, crud_ram.text, crud_gpu.text,
+                                                                     crud_stockage.text, crud_batterie.text, crud_price.text,
+                                                                     crud_buy_price.text, crud_stock.text, crud_sold.text, crud_order.text, 
+                                                                     crud_last_purchase.text), background_color=(0.184, 0.216, 0.231), background_normal='')
         
-        crud_close_p =  Button(text='Fermer', size_hint_x=1/8, width=100, on_release=lambda x: self.ids.ops_fields_p.clear_widgets())
-        #
+        crud_close_p =  Button(text='Fermer', size_hint_x=1/8, width=100,
+                               on_release=lambda x: self.ids.ops_fields_p.clear_widgets(),
+                               background_color=(0.184, 0.216, 0.231), background_normal='')
         
         target.add_widget(crud_code)
         target.add_widget(crud_marque)
@@ -346,9 +526,14 @@ class AdminWindow(BoxLayout):
         crud_order = TextInput(hint_text='Commande', multiline=False)
         crud_last_purchase = TextInput(hint_text='Dernier Achat', multiline=False)
         crud_submit_p =  Button(text='Modifier Produit', size_hint_x=1/8, width=100,
-                                on_release=lambda x:self.update_product(crud_code.text, crud_marque.text, crud_modele.text, crud_cpu.text, crud_ram.text, crud_gpu.text, crud_stockage.text, crud_batterie.text, crud_price.text, crud_buy_price.text, crud_stock.text, crud_sold.text, crud_order.text, crud_last_purchase.text))
+                                on_release=lambda x:self.update_product(crud_code.text, crud_marque.text, crud_modele.text, crud_cpu.text,
+                                                                        crud_ram.text, crud_gpu.text, crud_stockage.text, crud_batterie.text,
+                                                                        crud_price.text, crud_buy_price.text, crud_stock.text, crud_sold.text,
+                                                                        crud_order.text, crud_last_purchase.text), 
+                                background_color=(0.184, 0.216, 0.231), background_normal='')
         
-        crud_close_p =  Button(text='Fermer', size_hint_x=1/8, width=100, on_release=lambda x: self.ids.ops_fields_p.clear_widgets())
+        crud_close_p =  Button(text='Fermer', size_hint_x=1/8, width=100, on_release=lambda x: self.ids.ops_fields_p.clear_widgets(),
+                               background_color=(0.184, 0.216, 0.231), background_normal='')
         
         target.add_widget(crud_code)
         target.add_widget(crud_marque)
@@ -397,8 +582,10 @@ class AdminWindow(BoxLayout):
         target = self.ids.ops_fields_p
         target.clear_widgets()
         crud_ref = TextInput(hint_text="Référence", multiline=False, width=100, height=10)
-        crud_submit =  Button(text='Supprimer Produit', size_hint_x=None, width=150, on_release=lambda x: self.remove_product(crud_ref.text))
-        crud_close =  Button(text='Fermer', size_hint_x=None, width=100, on_release=lambda x: self.ids.ops_fields_p.clear_widgets())
+        crud_submit =  Button(text='Supprimer Produit', size_hint_x=None, width=150, background_color=(0.184, 0.216, 0.231), background_normal='',
+                              on_release=lambda x: self.remove_product(crud_ref.text))
+        crud_close =  Button(text='Fermer', size_hint_x=None, width=100, on_release=lambda x: self.ids.ops_fields_p.clear_widgets(),
+                             background_color=(0.184, 0.216, 0.231), background_normal='')
         spacer = Label(text='', size_hint_x=.6)
         target.add_widget(crud_ref)
         target.add_widget(crud_submit)
@@ -415,12 +602,16 @@ class AdminWindow(BoxLayout):
         if not self.product_exist(ref):
             self.error_popup("Le Produit n' existe pas")
             return 0
-        content = self.ids.scrn_contents
+        
+        content = self.ids.scrn_product_contents
         content.clear_widgets()
+        
         self.products.delete_many({"Ref":ref})
+        
         products = self.get_products()
         usertable  = DataTable(table=products)
         content.add_widget(usertable)
+        
         
         self.success_popup(f"le Produit {ref} a été Supprimé")
         return 0
@@ -433,10 +624,13 @@ class AdminWindow(BoxLayout):
         crud_last = TextInput(hint_text='Nom', multiline=False)
         crud_user = TextInput(hint_text="Nom d'utilisateur", size_hint_x=3/2, multiline=False)
         crud_pwd = TextInput(hint_text='Mot de passe', multiline=False, password=True)
-        crud_des = Spinner(text='Operateur', values=['Operateur', 'Administrateur'])
-        crud_submit =  Button(text='Ajouter', size_hint_x=None, width=100, on_release=lambda x:
-            self.add_user(crud_first.text, crud_last.text, crud_user.text, crud_pwd.text, crud_des.text))
-        crud_close =  Button(text='Fermer', size_hint_x=None, width=100, on_release=lambda x: self.ids.ops_fields.clear_widgets())
+        crud_des = Spinner(text='Operateur', values=['Operateur', 'Administrateur'],
+                           background_color=(0.184, 0.216, 0.231), background_normal='')
+        crud_submit =  Button(text='Ajouter', size_hint_x=None, width=100,
+                              background_color=(0.184, 0.216, 0.231), background_normal='',
+                              on_release=lambda x: self.add_user(crud_first.text, crud_last.text, crud_user.text, crud_pwd.text, crud_des.text))
+        crud_close =  Button(text='Fermer', size_hint_x=None, width=100, background_color=(0.184, 0.216, 0.231), background_normal='',
+                             on_release=lambda x: self.ids.ops_fields.clear_widgets())
         target.add_widget(crud_first)
         target.add_widget(crud_last)
         target.add_widget(crud_user)
@@ -479,10 +673,12 @@ class AdminWindow(BoxLayout):
         crud_last = TextInput(hint_text='Nom', multiline=False)
         crud_user = TextInput(hint_text="Nom d'utilisateur", size_hint_x=3/2, multiline=False)
         crud_pwd = TextInput(hint_text='Mot de passe', multiline=False, password=True)
-        crud_des = Spinner(text='Operateur', values=['Operateur', 'Administrateur'])
-        crud_submit =  Button(text='Modifier', size_hint_x=None, width=100, on_release=lambda x:
-            self.update_user(crud_first.text, crud_last.text, crud_user.text, crud_pwd.text, crud_des.text))
-        crud_close =  Button(text='Fermer', size_hint_x=None, width=100, on_release=lambda x: self.ids.ops_fields.clear_widgets())
+        crud_des = Spinner(text='Operateur', values=['Operateur', 'Administrateur'], background_color=(0.184, 0.216, 0.231), background_normal='')
+        crud_submit =  Button(text='Modifier', size_hint_x=None, width=100,
+                              background_color=(0.184, 0.216, 0.231), background_normal='',
+                              on_release=lambda x: self.update_user(crud_first.text, crud_last.text, crud_user.text, crud_pwd.text, crud_des.text))
+        crud_close =  Button(text='Fermer', background_color=(0.184, 0.216, 0.231), background_normal='',
+                             size_hint_x=None, width=100, on_release=lambda x: self.ids.ops_fields.clear_widgets())
         target.add_widget(crud_user)
         target.add_widget(crud_first)
         target.add_widget(crud_last)
@@ -519,8 +715,10 @@ class AdminWindow(BoxLayout):
         target = self.ids.ops_fields
         target.clear_widgets()
         crud_user = TextInput(hint_text="Nom d'utilisateur", multiline=False)
-        crud_submit =  Button(text='Supprimer', size_hint_x=None, width=100, on_release=lambda x: self.remove_user(crud_user.text))
-        crud_close =  Button(text='Fermer', size_hint_x=None, width=100, on_release=lambda x: self.ids.ops_fields.clear_widgets())
+        crud_submit =  Button(text='Supprimer', size_hint_x=None, width=100, background_color=(0.184, 0.216, 0.231), background_normal='',
+                              on_release=lambda x: self.remove_user(crud_user.text))
+        crud_close =  Button(text='Fermer', size_hint_x=None, width=100, background_color=(0.184, 0.216, 0.231), background_normal='',
+                             on_release=lambda x: self.ids.ops_fields.clear_widgets())
         target.add_widget(crud_user)
         target.add_widget(crud_submit)
         target.add_widget(crud_close)
@@ -568,3 +766,4 @@ class AdminApp(App):
 if __name__=="__main__":
     aa = AdminApp()
     aa.run()
+    
