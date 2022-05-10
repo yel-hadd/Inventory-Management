@@ -14,7 +14,9 @@ import hashlib
 import openpyxl
 import tkinter.filedialog
 from datetime import datetime
-
+from  random import choice
+from string import digits, ascii_uppercase
+from pandas import read_excel
 
 # IMPORTER EXCEL
 # EXPORTER EXCEL
@@ -96,6 +98,54 @@ class AdminWindow(BoxLayout):
         return 0
 
 
+    def gen_ref(self, marque):
+        numbers = digits
+        letters = ascii_uppercase
+
+        g = True
+
+        while g == True:
+            one = ''.join(choice(numbers) for i in range(3))
+            two = ''.join(choice(letters) for i in range(3))
+            ref = f"{marque[:3]}-{one}{two}"
+            g = self.product_exist(ref)
+
+        return ref
+    
+    
+    def import_xlsx(self):
+        path = tkinter.filedialog.askopenfilename(initialdir="/", title="Sélectionnez un fichier Excel",
+                                                  filetypes=[("Fichiers Excel", ".xlsx")])
+        if path == '':
+            return 0
+        
+        content = self.ids.scrn_product_contents
+        content.clear_widgets()
+        
+        df = read_excel(path)
+
+        df['gpu'] = df['gpu'].fillna('STANDARD')
+        df['prix_achat'] = df['prix_achat'].fillna(0)
+        df['vendu'] = df['vendu'].fillna(0)
+        df['dernier_achat'] = df['dernier_achat'].fillna('N/A')
+        df['batterie'] = df['batterie'].fillna('Bien')
+
+        data = df.to_dict(orient="records")
+
+        for record in data:
+            record['Ref'] = self.gen_ref(record['marque'])
+
+        self.products.insert_many(data)
+        
+        products = self.get_products()
+        usertable  = DataTable(table=products)
+        content.add_widget(usertable)
+        
+        self.success_popup(f"{len(data)} Produits Importés")
+
+        return 0
+    
+    
     def product_exist(self, ref):
         client = MongoClient()
         db = client.pos
@@ -240,9 +290,7 @@ class AdminWindow(BoxLayout):
         path = tkinter.filedialog.askdirectory()
         if path == '':
             return 0
-        client = MongoClient()
-        db = client.pos
-        products = db.stocks
+        
         _stocks = {}
 
         _stocks['Ref'] = {}
@@ -275,7 +323,7 @@ class AdminWindow(BoxLayout):
         commande = []
         dernier_achat = []
 
-        for product in products.find():
+        for product in self.products.find():
             Ref.append(product['Ref'])
             prix.append(product['prix'])
             try:
