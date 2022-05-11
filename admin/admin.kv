@@ -206,6 +206,47 @@
                 Screen:
                     id: content
                     name:  'scrn_order_content'
+                    BoxLayout:
+                        orientation:  "vertical"
+                        spacing: 10
+                        BoxLayout:
+                            id: order_stats
+                            size_hint_y: None
+                            height: 45
+                            Label:
+                                text: 'Produits en stock :'
+                                color: (0,0,0,0.5)
+                                bold: True
+                            
+                            Label:
+                                text: 'Produits Vendus :'
+                                color: (0,0,0,0.5)
+                                bold: True
+                                
+                        BoxLayout:
+                            id: scrn_order_contents
+                        BoxLayout:
+                            id: ops_btns_o
+                            spacing: 10
+                            size_hint_y: None
+                            height: 45
+                            TextInput:
+                                id: order_id
+                                hint_text: "Réference de commande"
+                                multiline: False
+                            Button:
+                                id: search_b
+                                text: "Rechercher"
+                                on_release: root.get_order()
+                                background_color: (.06, .45, .45, 1)
+                                background_normal: ''
+                            Button:
+                                id: search_b
+                                text: "Exporter Excel"
+                                on_release: root.add_user_fields()
+                                background_color: (.06, .45, .45, 1)
+                                background_normal: ''
+                            
                 Screen:
                     id: content
                     name:  'scrn_calc_content'
