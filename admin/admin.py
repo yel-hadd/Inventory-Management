@@ -50,7 +50,36 @@ class AdminWindow(BoxLayout):
         prod_table  = DataTable(table=products)
         order_scrn.add_widget(prod_table)
         
+ 
+ 
+    def calculate_price(self):
+        purchase = self.ids.purchase_price_calc.text
         
+        transport = self.ids.transport_calc.text
+        douane = self.ids.douane_calc.text
+        transitaire = self.ids.transitaire_calc.text
+        autres = self.ids.autres_calc.text
+        nbr = self.ids.nbr_prdct_calc.text
+        somme = float(purchase)+float(transport)+float(douane)+float(transitaire)+float(autres)
+        result = somme/int(nbr)
+        result = "{:.2f}".format(result)
+        self.ids.result_calc.text = f"Résultat: {result} DH PAR PRODUIT"
+        
+        return 0
+    
+    def clear_calc(self):
+        self.ids.purchase_price_calc.text = ''
+        self.ids.transport_calc.text = ''
+        self.ids.douane_calc.text = ''
+        self.ids.transitaire_calc.text = ''
+        self.ids.autres_calc.text = ''
+        self.ids.nbr_prdct_calc.text = ''
+        self.ids.result_calc.text = "Résultat: "
+        
+        return 0
+        
+        
+       
     
     def get_order(self):
         
@@ -201,7 +230,305 @@ class AdminWindow(BoxLayout):
 
         return ref
     
-    
+
+    def export_order_xlsx(self, enstock=False):
+        orderref = self.ids.order_id.text
+        if orderref == '':
+            return 0
+        
+        path = tkinter.filedialog.askdirectory()
+        if path == '':
+            return 0
+        
+        
+        _stocks = {}
+
+        _stocks['Ref'] = {}
+        _stocks['marque'] = {}
+        _stocks['modele'] = {}
+        _stocks['cpu'] = {}
+        _stocks['ram'] = {}
+        _stocks['stockage'] = {}
+        _stocks['gpu'] = {}
+        _stocks['batterie'] = {}
+        _stocks['prix'] = {}
+        _stocks['prix_achat'] = {}
+        _stocks['en_stock'] = {}
+        _stocks['vendu'] = {}
+        _stocks['commande'] = {}
+        _stocks['dernier_achat'] = {}
+
+        Ref = []
+        prix = []
+        prix_achat = []
+        marque = []
+        modele = []
+        cpu = []
+        ram = []
+        gpu = []
+        stockage = []
+        batterie = []
+        en_stock = []
+        vendu = []
+        commande = []
+        dernier_achat = []
+
+        for product in self.products.find():
+            Ref.append(product['Ref'])
+            prix.append(product['prix'])
+            try:
+                prix_achat.append(product['prix_achat'])
+            except KeyError:
+                prix_achat.append('')
+            marque.append(product['marque'])
+            modele.append(product['modele'])
+            cpu.append(product['cpu'])
+            ram.append(product['ram'])
+            gpu.append(product['gpu'])
+            stockage.append(product['stockage'])
+            batterie.append(product['batterie'])
+            try:    
+                en_stock.append(product['en_stock'])
+            except KeyError:
+                en_stock.append('')
+
+            try:    
+                vendu.append(product['vendu'])
+            except KeyError:
+                vendu.append('')
+
+            commande.append(product['commande'])
+
+            try:    
+                dernier_achat.append(product['dernier_achat'])
+            except KeyError:
+                dernier_achat.append('')
+
+
+        for c, v in enumerate(Ref):
+            _stocks['Ref'][c] = Ref[c]
+
+            _stocks['modele'][c] = modele[c]
+            _stocks['marque'][c] = marque[c]
+            _stocks['cpu'][c] = cpu[c]
+            _stocks['ram'][c] = ram[c]
+            _stocks['stockage'][c] = stockage[c]
+            _stocks['gpu'][c] = gpu[c]
+            _stocks['batterie'][c] = batterie[c]
+
+            _stocks['prix'][c] = prix[c]
+            _stocks['prix_achat'][c] = prix_achat[c]
+            _stocks['en_stock'][c] = en_stock[c]
+            _stocks['vendu'][c] = vendu[c]
+            _stocks['commande'][c] = commande[c]
+            _stocks['dernier_achat'][c] = dernier_achat[c]
+
+        titles = _stocks.keys()
+        titles = list(titles)
+
+        titles2 = ['Réf', 'Marque', 'Modèle', 'CPU', 'RAM', 'Stockage', 'GPU', 'Batterie',
+              'Prix', "Prix d'achat", 'En Stock', 'Vendu', 'Commande', 'Dernier Achat']
+
+        product = []
+        all_products = []
+
+        for c, v in enumerate(_stocks['Ref']):
+            product.append(_stocks[titles[0]][c])
+            product.append(_stocks[titles[1]][c])
+            product.append(_stocks[titles[2]][c])
+            product.append(_stocks[titles[3]][c])
+            product.append(_stocks[titles[4]][c])
+            product.append(_stocks[titles[5]][c])
+            product.append(_stocks[titles[6]][c])
+            product.append(_stocks[titles[7]][c])
+            product.append(_stocks[titles[8]][c])
+            product.append(_stocks[titles[9]][c])
+            product.append(int(_stocks[titles[10]][c]))
+            product.append(_stocks[titles[11]][c])
+            product.append(_stocks[titles[12]][c])
+            product.append(_stocks[titles[13]][c])
+            all_products.append(product)
+            product = []
+
+
+        if enstock == True:   
+            filename = f'/en-stock-{orderref}-'
+            filtered = []
+            for i in all_products:
+                if int(i[10]) >= 1 and i[12] == orderref:
+                    filtered.append(i)
+            all_products = filtered
+        else:
+            filtered = []
+            for i in all_products:
+                if i[12] == orderref:
+                    filtered.append(i)
+            all_products = filtered
+            filename = f'/tous-{orderref}-'
+
+        all_products.insert(0, titles2)
+
+        wb = openpyxl.Workbook()
+        ws_write = wb.worksheets[0]
+
+        for p in all_products:
+            ws_write.append(p)
+
+        today = datetime.today().strftime("%d-%m-%Y")
+        wb.save(filename=f'{path}{filename}{today}.xlsx')
+        
+        if enstock:
+            self.success_popup('les produits en stock ont été exportés')
+        else:
+            self.success_popup('Tous les produits ont été exportés')
+        
+        return 0
+
+
+    def export_xlsx(self, enstock=False):
+        path = tkinter.filedialog.askdirectory()
+        if path == '':
+            return 0
+        
+        _stocks = {}
+
+        _stocks['Ref'] = {}
+        _stocks['marque'] = {}
+        _stocks['modele'] = {}
+        _stocks['cpu'] = {}
+        _stocks['ram'] = {}
+        _stocks['stockage'] = {}
+        _stocks['gpu'] = {}
+        _stocks['batterie'] = {}
+        _stocks['prix'] = {}
+        _stocks['prix_achat'] = {}
+        _stocks['en_stock'] = {}
+        _stocks['vendu'] = {}
+        _stocks['commande'] = {}
+        _stocks['dernier_achat'] = {}
+
+        Ref = []
+        prix = []
+        prix_achat = []
+        marque = []
+        modele = []
+        cpu = []
+        ram = []
+        gpu = []
+        stockage = []
+        batterie = []
+        en_stock = []
+        vendu = []
+        commande = []
+        dernier_achat = []
+
+        for product in self.products.find():
+            Ref.append(product['Ref'])
+            prix.append(product['prix'])
+            try:
+                prix_achat.append(product['prix_achat'])
+            except KeyError:
+                prix_achat.append('')
+            marque.append(product['marque'])
+            modele.append(product['modele'])
+            cpu.append(product['cpu'])
+            ram.append(product['ram'])
+            gpu.append(product['gpu'])
+            stockage.append(product['stockage'])
+            batterie.append(product['batterie'])
+            try:    
+                en_stock.append(product['en_stock'])
+            except KeyError:
+                en_stock.append('')
+
+            try:    
+                vendu.append(product['vendu'])
+            except KeyError:
+                vendu.append('')
+
+            commande.append(product['commande'])
+
+            try:    
+                dernier_achat.append(product['dernier_achat'])
+            except KeyError:
+                dernier_achat.append('')
+
+
+        for c, v in enumerate(Ref):
+            _stocks['Ref'][c] = Ref[c]
+
+            _stocks['modele'][c] = modele[c]
+            _stocks['marque'][c] = marque[c]
+            _stocks['cpu'][c] = cpu[c]
+            _stocks['ram'][c] = ram[c]
+            _stocks['stockage'][c] = stockage[c]
+            _stocks['gpu'][c] = gpu[c]
+            _stocks['batterie'][c] = batterie[c]
+
+            _stocks['prix'][c] = prix[c]
+            _stocks['prix_achat'][c] = prix_achat[c]
+            _stocks['en_stock'][c] = en_stock[c]
+            _stocks['vendu'][c] = vendu[c]
+            _stocks['commande'][c] = commande[c]
+            _stocks['dernier_achat'][c] = dernier_achat[c]
+
+        titles = _stocks.keys()
+        titles = list(titles)
+
+        titles2 = ['Réf', 'Marque', 'Modèle', 'CPU', 'RAM', 'Stockage', 'GPU', 'Batterie',
+              'Prix', "Prix d'achat", 'En Stock', 'Vendu', 'Commande', 'Dernier Achat']
+
+        product = []
+        all_products = []
+
+        for c, v in enumerate(_stocks['Ref']):
+            product.append(_stocks[titles[0]][c])
+            product.append(_stocks[titles[1]][c])
+            product.append(_stocks[titles[2]][c])
+            product.append(_stocks[titles[3]][c])
+            product.append(_stocks[titles[4]][c])
+            product.append(_stocks[titles[5]][c])
+            product.append(_stocks[titles[6]][c])
+            product.append(_stocks[titles[7]][c])
+            product.append(_stocks[titles[8]][c])
+            product.append(_stocks[titles[9]][c])
+            product.append(int(_stocks[titles[10]][c]))
+            product.append(_stocks[titles[11]][c])
+            product.append(_stocks[titles[12]][c])
+            product.append(_stocks[titles[13]][c])
+            all_products.append(product)
+            product = []
+
+
+        if enstock == True:   
+            filename = '/en-stock-'
+            filtered = []
+            for i in all_products:
+                if int(i[10]) >= 1:
+                    filtered.append(i)
+            all_products = filtered
+        else:
+            filename = '/tous-'
+
+        all_products.insert(0, titles2)
+
+        wb = openpyxl.Workbook()
+        ws_write = wb.worksheets[0]
+
+        for p in all_products:
+            ws_write.append(p)
+
+        today = datetime.today().strftime("%d-%m-%Y")
+        wb.save(filename=f'{path}{filename}{today}.xlsx')
+        
+        if enstock:
+            self.success_popup('les produits en stock ont été exportés')
+        else:
+            self.success_popup('Tous les produits ont été exportés')
+        
+        return 0
+
+  
     def import_xlsx(self):
         path = tkinter.filedialog.askopenfilename(initialdir="/", title="Sélectionnez un fichier Excel",
                                                   filetypes=[("Fichiers Excel", ".xlsx")])
@@ -380,150 +707,6 @@ class AdminWindow(BoxLayout):
 
         return _stocks
     
-    
-    def export_xlsx(self, enstock=False):
-        path = tkinter.filedialog.askdirectory()
-        if path == '':
-            return 0
-        
-        _stocks = {}
-
-        _stocks['Ref'] = {}
-        _stocks['marque'] = {}
-        _stocks['modele'] = {}
-        _stocks['cpu'] = {}
-        _stocks['ram'] = {}
-        _stocks['stockage'] = {}
-        _stocks['gpu'] = {}
-        _stocks['batterie'] = {}
-        _stocks['prix'] = {}
-        _stocks['prix_achat'] = {}
-        _stocks['en_stock'] = {}
-        _stocks['vendu'] = {}
-        _stocks['commande'] = {}
-        _stocks['dernier_achat'] = {}
-
-        Ref = []
-        prix = []
-        prix_achat = []
-        marque = []
-        modele = []
-        cpu = []
-        ram = []
-        gpu = []
-        stockage = []
-        batterie = []
-        en_stock = []
-        vendu = []
-        commande = []
-        dernier_achat = []
-
-        for product in self.products.find():
-            Ref.append(product['Ref'])
-            prix.append(product['prix'])
-            try:
-                prix_achat.append(product['prix_achat'])
-            except KeyError:
-                prix_achat.append('')
-            marque.append(product['marque'])
-            modele.append(product['modele'])
-            cpu.append(product['cpu'])
-            ram.append(product['ram'])
-            gpu.append(product['gpu'])
-            stockage.append(product['stockage'])
-            batterie.append(product['batterie'])
-            try:    
-                en_stock.append(product['en_stock'])
-            except KeyError:
-                en_stock.append('')
-
-            try:    
-                vendu.append(product['vendu'])
-            except KeyError:
-                vendu.append('')
-
-            commande.append(product['commande'])
-
-            try:    
-                dernier_achat.append(product['dernier_achat'])
-            except KeyError:
-                dernier_achat.append('')
-
-
-        for c, v in enumerate(Ref):
-            _stocks['Ref'][c] = Ref[c]
-
-            _stocks['modele'][c] = modele[c]
-            _stocks['marque'][c] = marque[c]
-            _stocks['cpu'][c] = cpu[c]
-            _stocks['ram'][c] = ram[c]
-            _stocks['stockage'][c] = stockage[c]
-            _stocks['gpu'][c] = gpu[c]
-            _stocks['batterie'][c] = batterie[c]
-
-            _stocks['prix'][c] = prix[c]
-            _stocks['prix_achat'][c] = prix_achat[c]
-            _stocks['en_stock'][c] = en_stock[c]
-            _stocks['vendu'][c] = vendu[c]
-            _stocks['commande'][c] = commande[c]
-            _stocks['dernier_achat'][c] = dernier_achat[c]
-
-        titles = _stocks.keys()
-        titles = list(titles)
-
-        titles2 = ['Réf', 'Marque', 'Modèle', 'CPU', 'RAM', 'Stockage', 'GPU', 'Batterie',
-              'Prix', "Prix d'achat", 'En Stock', 'Vendu', 'Commande', 'Dernier Achat']
-
-        product = []
-        all_products = []
-
-        for c, v in enumerate(_stocks['Ref']):
-            product.append(_stocks[titles[0]][c])
-            product.append(_stocks[titles[1]][c])
-            product.append(_stocks[titles[2]][c])
-            product.append(_stocks[titles[3]][c])
-            product.append(_stocks[titles[4]][c])
-            product.append(_stocks[titles[5]][c])
-            product.append(_stocks[titles[6]][c])
-            product.append(_stocks[titles[7]][c])
-            product.append(_stocks[titles[8]][c])
-            product.append(_stocks[titles[9]][c])
-            product.append(int(_stocks[titles[10]][c]))
-            product.append(_stocks[titles[11]][c])
-            product.append(_stocks[titles[12]][c])
-            product.append(_stocks[titles[13]][c])
-            all_products.append(product)
-            product = []
-
-
-        if enstock == True:   
-            filename = '/en-stock-'
-            filtered = []
-            for i in all_products:
-                if i[10] >= 1:
-                    filtered.append(i)
-            all_products = filtered
-        else:
-            filename = '/tous-'
-
-        all_products.insert(0, titles2)
-
-        wb = openpyxl.Workbook()
-        ws_write = wb.worksheets[0]
-
-        for p in all_products:
-            ws_write.append(p)
-
-        today = datetime.today().strftime("%d-%m-%Y")
-        wb.save(filename=f'{path}{filename}{today}.xlsx')
-        
-        if enstock:
-            self.success_popup('les produits en stock ont été exportés')
-        else:
-            self.success_popup('Tous les produits ont été exportés')
-        
-        return 0
-
     
     def export_excel_fields(self):
         target = self.ids.ops_fields_p
