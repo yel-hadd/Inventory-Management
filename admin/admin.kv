@@ -180,7 +180,7 @@
                             Button:
                                 id: crud_export_bulk
                                 text: "Imprimer Ticket"
-                                on_release: root.add_product_fields()
+                                on_release: root.add_print_fields()
                                 background_color: (.06, .45, .45, 1)
                                 background_normal: ''
                             Button:
@@ -229,6 +229,13 @@
                                 id: export_order_stock
                                 text: "Exporter Les Produits En Stock"
                                 on_release: root.export_order_xlsx(True)
+                                background_color: (.06, .45, .45, 1)
+                                background_normal: ''
+
+                            Button:
+                                id: print_order_labels
+                                text: "Imprimer les Tickets"
+                                on_release: root.create_order_labels(order_id.text)
                                 background_color: (.06, .45, .45, 1)
                                 background_normal: ''
                             
