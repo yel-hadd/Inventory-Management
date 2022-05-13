@@ -24,8 +24,7 @@ import os
 
 
 
-# COMMANDE  SCREEN
-# CALCULATOR
+# TIDY UP CODE BY SCREEN
 
 
 class AdminWindow(BoxLayout):
@@ -54,6 +53,12 @@ class AdminWindow(BoxLayout):
         products = self.get_products()
         prod_table  = DataTable(table=products)
         order_scrn.add_widget(prod_table)
+        
+        #scrn_search_content
+        search_scrn = self.ids.scrn_search_contents
+        products = self.get_products()
+        prod_table  = DataTable(table=products)
+        search_scrn.add_widget(prod_table)
         
  
     def calculate_price(self):
@@ -324,6 +329,91 @@ class AdminWindow(BoxLayout):
             order_scrn.add_widget(prod_table)
 
             return _stocks
+
+
+    def get_product(self):
+        print('****')
+        
+        orderref = self.ids.prod_id.text
+        if orderref == '':
+            return 0
+        
+        order_scrn = self.ids.scrn_search_contents
+        order_scrn.clear_widgets()
+        
+        _stocks = {}
+        _stocks['Ref'] = {}
+        _stocks['designation'] = {}
+        _stocks['prix'] = {}
+        _stocks['prix_achat'] = {}
+        _stocks['en_stock'] = {}
+        _stocks['vendu'] = {}
+        _stocks['commande'] = {}
+        _stocks['dernier_achat'] = {}
+        Ref = []
+        prix = []
+        prix_achat = []
+        marque = []
+        modele = []
+        cpu = []
+        ram = []
+        gpu = []
+        stockage = []
+        batterie = []
+        en_stock = []
+        vendu = []
+        commande = []
+        dernier_achat = []
+        for product in self.products.find({"Ref": f"{orderref}"}):
+            Ref.append(product['Ref'])
+            prix.append(product['prix'])
+
+            try:
+                prix_achat.append(product['prix_achat'])
+            except KeyError:
+                prix_achat.append('')
+
+            marque.append(product['marque'])
+            modele.append(product['modele'])
+            cpu.append(product['cpu'])
+            ram.append(product['ram'])
+            gpu.append(product['gpu'])
+            stockage.append(product['stockage'])
+            batterie.append(product['batterie'])
+
+            try:    
+                en_stock.append(product['en_stock'])
+            except KeyError:
+                en_stock.append('')
+
+            try:    
+                vendu.append(product['vendu'])
+            except KeyError:
+                vendu.append('')
+
+            commande.append(product['commande'])
+
+            try:    
+                dernier_achat.append(product['dernier_achat'])
+            except KeyError:
+                dernier_achat.append('')
+
+        for c, v in enumerate(Ref):
+            _stocks['Ref'][c] = Ref[c]
+            _stocks['designation'][c] = f"{marque[c]} {modele[c]} | {cpu[c]} | {ram[c]}GB\n{stockage[c]} | {gpu[c]} | {batterie[c]}"
+            _stocks['prix'][c] = prix[c]
+            _stocks['prix_achat'][c] = prix_achat[c]
+            _stocks['en_stock'][c] = en_stock[c]
+            _stocks['vendu'][c] = vendu[c]
+            _stocks['commande'][c] = commande[c]
+            _stocks['dernier_achat'][c] = dernier_achat[c]
+
+        
+        products = _stocks
+        prod_table  = DataTable(table=products)
+        order_scrn.add_widget(prod_table)
+
+        return _stocks
 
     
     def missing_field_popup(self, field):
@@ -1253,6 +1343,7 @@ class AdminWindow(BoxLayout):
         return 0
     
     
+    
     def change_screen(self, instance):
         if instance.text == 'Utilisateurs':
             self.ids.scrn_mngr.current = 'scrn_content'
@@ -1263,7 +1354,9 @@ class AdminWindow(BoxLayout):
         elif instance.text == 'Calculateur':
             self.ids.scrn_mngr.current = 'scrn_calc_content'
         elif instance.text == 'Statistiques':
-            self.ids.scrn_mngr.current = 'scrn_analysis_content'     
+            self.ids.scrn_mngr.current = 'scrn_analysis_content' 
+        elif instance.text == 'Recherche':
+            self.ids.scrn_mngr.current = 'scrn_search_content'    
         return 0
 
 

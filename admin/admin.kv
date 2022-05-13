@@ -78,6 +78,14 @@
                 on_state: root.change_screen(self)
             ToggleButton:
                 id: products_toggle
+                text: "Recherche"
+                size_hint_y:.1
+                background_color: (.06, 0.45, .35, 1)
+                background_normal: ''
+                group: 'admin_navs'
+                on_state: root.change_screen(self)
+            ToggleButton:
+                id: products_toggle
                 text: "Commandes"
                 size_hint_y:.1
                 background_color: (.06, 0.45, .35, 1)
@@ -239,6 +247,10 @@
                                 background_color: (.06, .45, .45, 1)
                                 background_normal: ''
                             
+
+
+
+
                 Screen:
                     id: content
                     name:  'scrn_calc_content'
@@ -261,6 +273,7 @@
                             size_hint_y: None
                             height: 40
                             size_hint_x: .5
+                            on_text_validate: transport_calc.focus = True
                         TextInput:
                             hint_text: "Transport"
                             id: transport_calc
@@ -268,6 +281,7 @@
                             size_hint_y: None
                             size_hint_x: .5
                             height: 40
+                            on_text_validate: douane_calc.focus = True
                         TextInput:
                             hint_text: "Douane"
                             id: douane_calc
@@ -275,6 +289,7 @@
                             size_hint_y: None
                             size_hint_x: .5
                             height: 40
+                            on_text_validate: transitaire_calc.focus = True
                         TextInput:
                             hint_text: "Frais de Transitaire"
                             id: transitaire_calc
@@ -282,6 +297,7 @@
                             size_hint_y: None
                             size_hint_x: .5
                             height: 40
+                            on_text_validate: autres_calc.focus = True
                         TextInput:
                             hint_text: "Autres"
                             id: autres_calc
@@ -289,6 +305,7 @@
                             size_hint_y: None
                             size_hint_x: .5
                             height: 40
+                            on_text_validate: nbr_prdct_calc.focus = True
                         TextInput:
                             hint_text: "Nombre des Produits"
                             id: nbr_prdct_calc
@@ -331,3 +348,37 @@
                             padding: (0, 10)
                         BoxLayout:
                             orientation: "vertical"
+                Screen:
+                    id: content
+                    name:  'scrn_search_content'
+                    BoxLayout:
+                        orientation:  "vertical"
+                        spacing: 10
+                        BoxLayout:
+                            id: scrn_search_contents
+                        BoxLayout:
+                            id: ops_btns_s
+                            spacing: 10
+                            size_hint_y: None
+                            height: 45
+                            TextInput:
+                                id: prod_id
+                                hint_text: "Réference de produit"
+                                multiline: False
+                            Button:
+                                id: search_b_s
+                                text: "Rechercher"
+                                on_release: root.get_product()
+                                background_color: (.06, .45, .45, 1)
+                                background_normal: ''
+                            Button:
+                                id: print_prod_label
+                                text: "Imprimer le Ticket"
+                                on_release: root.create_label(prod_id.text)
+                                background_color: (.06, .45, .45, 1)
+                                background_normal: ''
+                            
+
+
+
+

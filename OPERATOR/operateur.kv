@@ -165,10 +165,16 @@
                     Label:
                         text: 'Totale'
                         size_hint_x: .2
-                GridLayout:
-                    id: products
-                    cols: 1
-                    spacing: 15
+                ScrollView:
+                    GridLayout:
+                        id: products
+                        cols: 1
+                        spacing: 15
+                        size_hint_y: None
+                        height: self.minimum_height
+
+                    
+                    
 
         BoxLayout:
             id: preview
