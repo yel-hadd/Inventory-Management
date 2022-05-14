@@ -79,12 +79,9 @@
                     
                 FlatButton:
                     text: 'Réf'
-                    size_hint_x: .3
+                    size_hint_x: .2
                 FlatButton:
                     text: 'Qté'
-                    size_hint_x: .1
-                FlatButton:
-                    text: 'Prix'
                     size_hint_x: .1
                 FlatButton:
                     text: 'Réd'
@@ -95,9 +92,6 @@
                 FlatButton:
                     text: 'TVA'
                     size_hint_x: .1
-                FlatButton:
-                    text: 'Totale'
-                    size_hint_x: .2
 
             BoxLayout:
                 id: product_inputs
@@ -106,15 +100,11 @@
                 spacing: 5
                 TextInput:
                     id: code_inp
-                    size_hint_x: .3
+                    size_hint_x: .2
                     multiline: False
                     on_text_validate: root.update_purchases()
                 TextInput:
                     id: qty_inp
-                    size_hint_x: .1
-                    multiline: False
-                TextInput:
-                    id: price_inp
                     size_hint_x: .1
                     multiline: False
                 TextInput:
@@ -128,11 +118,6 @@
                 TextInput:
                     id: vat_inp
                     size_hint_x: .1
-                    multiline: False
-                
-                TextInput:
-                    id: total_inp
-                    size_hint_x: .2
                     multiline: False
             BoxLayout:
                 id: add_to_cart
@@ -162,6 +147,9 @@
                     Label:
                         text: 'Réd'
                         size_hint_x: .1
+                    Label:
+                        text: 'TVA'
+                        size_hint_x: .3/2
                     Label:
                         text: 'Totale'
                         size_hint_x: .2

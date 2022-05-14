@@ -15,17 +15,23 @@ class OperateurWindow(BoxLayout):
 
     def update_purchases(self):
         pcode = self.ids.code_inp.text
+        try:
+            pqty = int(self.ids.qty_inp.text)
+        except:
+            pqty = 1
+        
         product_container = self.ids.products
 
         if pcode == "1234" or pcode=="2345":
             details = BoxLayout(size_hint_y=None, height=30, pos_hint={'top': 1})
             product_container.add_widget(details)
             #thumbnail = Image(size_hint_x=.3/2, source='./1.png')
-            code = Label(text=pcode, size_hint_x=.2, color=(0, 0, 0, 1))
+            code = Label(text="LEB-555AAA", size_hint_x=.2, color=(0, 0, 0, 1))
             name = Label(text='HP PROBOOK 640 G2 | Intel® i5‑5350H 3.7 Ghz\n16 RAM | 320 SSD | 15,6" | 90 %', size_hint_x=.6, color=(.06, .45, .45, 1), height=10)
             qty = Label(text="1000", size_hint_x=.1, color=(0, 0, 0, 1))
             disc = Label(text="12000.00", size_hint_x=.1, color=(0, 0, 0, 1))
             price = Label(text="12000.00", size_hint_x=.2, color=(0, 0, 0, 1))
+            tva = Label(text="12000.00", size_hint_x=.3/2, color=(0, 0, 0, 1))
             total = Label(text="12000.00", size_hint_x=.2, color=(0, 0, 0, 1))
             #details.add_widget(thumbnail)
             details.add_widget(code)
@@ -33,6 +39,7 @@ class OperateurWindow(BoxLayout):
             details.add_widget(name)
             details.add_widget(price)
             details.add_widget(disc)
+            details.add_widget(tva)
             details.add_widget(total)
 
             # update receipt preview
