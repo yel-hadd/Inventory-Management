@@ -22,7 +22,7 @@
                 size: self.size
                 pos: self.pos
         Label:
-            text: 'Mr. Abdelatif POS'
+            text: 'PRONTO IT'
             size_hint_x: .9
             bold: True
             color: (1,1,1,1)
@@ -185,6 +185,23 @@
                 id: receipt_preview
                 readonly: True
                 text: "Bienvenue Chez\nMr. Abdelatif Store !\n\nReçu N°: ********\nDate: 24-10-2022\n\n315 Rue Anywhere\n80000 AlWifaq, Agadir\n0619666722\nyassine.e@aol.com\n\n"
+
+            BoxLayout:
+                orientation: "horizontal"
+                size_hint_y: None
+                height: 45
+                spacing: 5
+                padding: (0, 5)
+
+                Button:
+                    text: "Imprimer le Reçu"
+                    background_color: (.06, .45, .45, 1)
+                    background_normal: ''
+                Button:
+                    text: "Effacer"
+                    background_color: (.06, .45, .45, 1)
+                    background_normal: ''
+
 
     BoxLayout:
         id: footer
