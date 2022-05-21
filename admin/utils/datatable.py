@@ -16,7 +16,7 @@ Builder.load_string('''
         bold: True
         RecycleGridLayout:
             id: table_floor_layout
-            cols: 8
+            cols: 10
             default_size: (None, 250)
             default_size_hint: (1, None)
             size_hint_y: None
@@ -37,7 +37,6 @@ class DataTable(BoxLayout):
     def __init__(self,  table, **kwargs):
         super().__init__(**kwargs)
 
-
         products = table
         col_titles = [k for k in products.keys()]
         row_len = len(products[col_titles[0]])
@@ -45,25 +44,21 @@ class DataTable(BoxLayout):
         table_data = []
         for t in col_titles:
             if  t == 'designation':
-                table_data.append({'text':str(t), 'size_hint_y':None, 'size_hint_x':5, 'height':50, 'bcolor':(.06,.45, .45, 1)})
+                table_data.append({'text':str(t), 'size_hint_y':None, 'size_hint_x':4, 'height':50, 'bcolor':(.06,.45, .45, 1)})
+            elif t == 'commentaire':
+                table_data.append({'text':str(t), 'size_hint_y':None, 'size_hint_x':1.2, 'height':50, 'bcolor':(.06,.45, .45, 1)})
+            elif t == 'en_stock':
+                table_data.append({'text':str(t), 'size_hint_y':None, 'size_hint_x':1/4, 'height':50, 'bcolor':(.06,.45, .45, 1)})
+            elif t == 'vendu':
+                table_data.append({'text':str(t), 'size_hint_y':None, 'size_hint_x':1/4, 'height':50, 'bcolor':(.06,.45, .45, 1)})
             else:
                 table_data.append({'text':str(t), 'size_hint_y':None, 'height':50, 'bcolor':(.06,.45, .45, 1)})
 
+        
         for r in range(row_len):
             for t in col_titles:
-                table_data.append({'text':str(products[t][r]),
-                                   'size_hint_y':None, 'height':40, 'bcolor':(.06,  .25, .25, 1)})
-        
-                
-        
+                table_data.append({'text':str(products[t][r]), 'size_hint_y':None, 'height':40, 'bcolor':(.06,  .25, .25, 1)})
+       
         self.ids.table_floor.data = table_data
         self.ids.table_floor_layout.cols  = self.columns
 
-
-#class DataTableApp(App):
-#    def build(self):
-#
-#        return DataTable()
-#
-#if __name__=='__main__':
-#    DataTableApp().run()

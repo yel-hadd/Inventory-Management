@@ -13,6 +13,7 @@ class OperateurWindow(BoxLayout):
         self.qty = []
         self.total = 0.00
 
+
     def update_purchases(self):
         pcode = self.ids.code_inp.text
         product_container = self.ids.products

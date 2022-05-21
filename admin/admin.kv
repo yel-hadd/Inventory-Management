@@ -40,7 +40,7 @@
                         height: 30
 
         Label:
-            text: 'Mr. Abdelatif Store | Portail Administrateur'
+            text: 'PRONTO IT | Portail Administrateur'
             bold: True
             size_hint: (.9, None)
             height: 30
@@ -94,6 +94,22 @@
                 group: 'admin_navs'
             ToggleButton:
                 id: products_toggle
+                text: "Fournisseurs"
+                size_hint_y:.1
+                background_color: (.06, 0.45, .35, 1)
+                background_normal: ''
+                on_state: root.change_screen(self)
+                group: 'admin_navs'
+            ToggleButton:
+                id: products_toggle
+                text: "Transactions"
+                size_hint_y:.1
+                background_color: (.06, 0.45, .35, 1)
+                background_normal: ''
+                on_state: root.change_screen(self)
+                group: 'admin_navs'
+            ToggleButton:
+                id: products_toggle
                 text: "Calculateur"
                 size_hint_y:.1
                 background_color: (.06, 0.45, .35, 1)
@@ -109,7 +125,7 @@
         BoxLayout:
             id: all_content
             size_hint_x: .8
-            padding: (20,10)
+            padding: (10,10)
             ScreenManager:
                 id: scrn_mngr
                 Screen:
@@ -154,6 +170,12 @@
                     BoxLayout:
                         orientation: "vertical"
                         spacing: 10
+                        GridLayout:
+                            id: scrn_product_stats
+                            cols: 6
+                            size_hint_y: None
+                            height: 40
+                            spacing: 10
                         BoxLayout:
                             id: scrn_product_contents
                         GridLayout:
@@ -209,6 +231,12 @@
                     BoxLayout:
                         orientation:  "vertical"
                         spacing: 10
+                        GridLayout:
+                            id: scrn_order_stats
+                            cols: 6
+                            size_hint_y: None
+                            height: 40
+                            spacing: 10
                         BoxLayout:
                             id: scrn_order_contents
                         BoxLayout:
@@ -251,6 +279,56 @@
 
 
 
+                
+                
+                
+                
+                
+                
+                
+                Screen:
+                    id: content
+                    name:  'scrn_supplier_content'
+                    BoxLayout:
+                        orientation:  "vertical"
+                        spacing: 10
+                        GridLayout:
+                            id: scrn_supplier_stats
+                            cols: 6
+                            size_hint_y: None
+                            height: 40
+                            spacing: 10
+                            padding:(10,5)
+                        BoxLayout:
+                            id: scrn_supplier_contents
+                        BoxLayout:
+                            id: ops_btns_supplier
+                            spacing: 10
+                            size_hint_y: None
+                            height: 45
+                            TextInput:
+                                id: supplier_id
+                                hint_text: "Réference de fournisseur"
+                                multiline: False
+                            Button:
+                                id: search_b_s
+                                text: "Rechercher"
+                                on_release: root.get_supp()
+                                background_color: (.06, .45, .45, 1)
+                                background_normal: ''
+                            Button:
+                                id: export_order_all_s
+                                text: "Exporter Tous Les Produits"
+                                on_release: root.export_order_xlsx()
+                                background_color: (.06, .45, .45, 1)
+                                background_normal: ''
+
+                            Button:
+                                id: export_order_stock_s
+                                text: "Exporter Les Produits En Stock"
+                                on_release: root.export_order_xlsx(True)
+                                background_color: (.06, .45, .45, 1)
+                                background_normal: ''
                 Screen:
                     id: content
                     name:  'scrn_calc_content'
@@ -377,8 +455,3 @@
                                 on_release: root.create_label(prod_id.text)
                                 background_color: (.06, .45, .45, 1)
                                 background_normal: ''
-                            
-
-
-
-
