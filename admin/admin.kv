@@ -317,16 +317,15 @@
                                 background_color: (.06, .45, .45, 1)
                                 background_normal: ''
                             Button:
-                                id: export_order_all_s
+                                id: export_all_b_s
                                 text: "Exporter Tous Les Produits"
-                                on_release: root.export_order_xlsx()
+                                on_release: root.export_supp_xlsx()
                                 background_color: (.06, .45, .45, 1)
                                 background_normal: ''
-
                             Button:
-                                id: export_order_stock_s
+                                id: export_stock_b_s
                                 text: "Exporter Les Produits En Stock"
-                                on_release: root.export_order_xlsx(True)
+                                on_release: root.export_supp_xlsx(True)
                                 background_color: (.06, .45, .45, 1)
                                 background_normal: ''
                 Screen:

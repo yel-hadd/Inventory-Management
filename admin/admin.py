@@ -16,7 +16,7 @@ import tkinter.filedialog
 from datetime import datetime
 from  random import choice
 from string import digits, ascii_uppercase
-from pandas import read_excel
+from pandas import read_excel, to_numeric
 from PIL import ImageFont, ImageDraw
 import PIL.Image
 import qrcode
@@ -252,281 +252,503 @@ class AdminWindow(BoxLayout):
         return 0
 
 
-    def get_order(self):
+    def get_order(self, for_export=False):
         orderref = self.ids.order_id.text
         if orderref == '':
             return 0
+        products = self.products
+
         
-        stats = self.ids.scrn_order_stats
-        order_scrn = self.ids.scrn_order_contents
-        order_scrn.clear_widgets()
-        stats.clear_widgets()
-        
-        _stocks = {}
-        _stocks['Ref'] = {}
-        _stocks['designation'] = {}
-        _stocks['prix'] = {}
-        _stocks['prix_achat'] = {}
-        _stocks['en_stock'] = {}
-        _stocks['vendu'] = {}
-        _stocks['commande'] = {}
-        _stocks['fournisseur'] = {}
-        _stocks['dernier_achat'] = {}
-        _stocks['commentaire'] = {}
-        Ref = []
-        prix = []
-        prix_achat = []
-        marque = []
-        modele = []
-        cpu = []
-        ram = []
-        gpu = []
-        stockage = []
-        batterie = []
-        en_stock = []
-        vendu = []
-        commande = []
-        fournisseur = []
-        dernier_achat = []
-        commentaire = []
-        
-        for product in self.products.find({"commande": f"{orderref}"}):
-            Ref.append(product['Ref'])
-            prix.append(float(product['prix']))
+        if for_export:
+            _stocks = {}
+            _stocks['Ref'] = {}
+            _stocks['marque'] = {}
+            _stocks['modele'] = {}
+            _stocks['cpu'] = {}
+            _stocks['ram'] = {}
+            _stocks['stockage'] = {}
+            _stocks['gpu'] = {}
+            _stocks['batterie'] = {}
+            _stocks['prix'] = {}
+            _stocks['prix_achat'] = {}
+            _stocks['en_stock'] = {}
+            _stocks['vendu'] = {}
+            _stocks['commande'] = {}
+            _stocks['fournisseur'] = {}
+            _stocks['dernier_achat'] = {}
+            _stocks['commentaire'] = {}
 
-            try:
-                prix_achat.append(float(product['prix_achat']))
-            except KeyError:
-                prix_achat.append(0)
+            Ref = []
+            prix = []
+            prix_achat = []
+            marque = []
+            modele = []
+            cpu = []
+            ram = []
+            gpu = []
+            stockage = []
+            batterie = []
+            en_stock = []
+            vendu = []
+            commande = []
+            fournisseur = []
+            dernier_achat = []
+            commentaire = []
 
-            marque.append(product['marque'])
-            modele.append(product['modele'])
-            cpu.append(product['cpu'])
-            ram.append(product['ram'])
-            gpu.append(product['gpu'])
-            stockage.append(product['stockage'])
-            batterie.append(product['batterie'])
+            for product in products.find({"commande": f"{orderref}"}):
+                Ref.append(product['Ref'])
+                prix.append(product['prix'])
+                try:
+                    prix_achat.append(product['prix_achat'])
+                except KeyError:
+                    prix_achat.append('')
+                marque.append(product['marque'])
+                modele.append(product['modele'])
+                cpu.append(product['cpu'])
+                ram.append(product['ram'])
+                gpu.append(product['gpu'])
+                stockage.append(product['stockage'])
+                batterie.append(product['batterie'])
+                try:    
+                    en_stock.append(product['en_stock'])
+                except KeyError:
+                    en_stock.append('')
 
-            try:    
-                en_stock.append(product['en_stock'])
-            except KeyError:
-                en_stock.append('')
+                try:    
+                    vendu.append(product['vendu'])
+                except KeyError:
+                    vendu.append('')
 
-            try:    
-                vendu.append(product['vendu'])
-            except KeyError:
-                vendu.append('')
+                commande.append(product['commande'])
 
-            commande.append(product['commande'])
+                try:    
+                    fournisseur.append(product['fournisseur'])
+                except KeyError:
+                    fournisseur.append('')
+
+                try:    
+                    dernier_achat.append(product['dernier_achat'])
+                except KeyError:
+                    dernier_achat.append('')
+
+                try:    
+                    commentaire.append(product['commentaire'])
+                except KeyError:
+                    commentaire.append('****')
+
+            sum_purchase_price = []
+            sum_sold_list = []
+            sold_items = []
+            in_stock_items = []
+            in_stock_items_price = []
+
+            for c, v in enumerate(Ref):
+                _stocks['Ref'][c] = Ref[c]
+                _stocks['marque'][c] = marque[c]
+                _stocks['modele'][c] = modele[c]
+                _stocks['cpu'][c] = cpu[c]
+                _stocks['ram'][c] = ram[c]
+                _stocks['stockage'][c] = stockage[c]
+                _stocks['gpu'][c] = gpu[c]
+                _stocks['batterie'][c] = batterie[c]
+                _stocks['prix'][c] = prix[c]
+                _stocks['prix_achat'][c] = prix_achat[c]
+                _stocks['en_stock'][c] = en_stock[c]
+                _stocks['vendu'][c] = vendu[c]
+                _stocks['commande'][c] = commande[c]
+                _stocks['dernier_achat'][c] = dernier_achat[c]
+                _stocks['commentaire'][c] = commentaire[c]
+                _stocks['fournisseur'][c] = fournisseur[c]
             
-            try:    
-                fournisseur.append(product['fournisseur'])
-            except KeyError:
-                fournisseur.append('')
+                if vendu[c] == '':
+                    vendu[c] = 0
 
-            try:    
-                dernier_achat.append(product['dernier_achat'])
-            except KeyError:
-                dernier_achat.append('')
-                
-            try:    
-                commentaire.append(product['commentaire'])
-            except KeyError:
-                commentaire.append('')
+                if en_stock[c] == '':
+                    en_stock[c] = 0
+        else:
+            stats = self.ids.scrn_order_stats
+            order_scrn = self.ids.scrn_order_contents
+            order_scrn.clear_widgets()
+            stats.clear_widgets()
+            _stocks = {}
+            _stocks['Ref'] = {}
+            _stocks['designation'] = {}
+            _stocks['prix'] = {}
+            _stocks['prix_achat'] = {}
+            _stocks['en_stock'] = {}
+            _stocks['vendu'] = {}
+            _stocks['commande'] = {}
+            _stocks['fournisseur'] = {}
+            _stocks['dernier_achat'] = {}
+            _stocks['commentaire'] = {}
 
-        sum_purchase_price = []
-        sum_sold_list = []
-        sold_items = []
-        in_stock_items = []
-        in_stock_items_price = []
-        
-        for c, v in enumerate(Ref):
-            if int(vendu[c]) >= 1:
-                sum_sold_list.append(int(vendu[c])*float(prix[c]))
-                sold_items.append(int(vendu[c]))
-                sum_purchase_price.append(int(vendu[c])*float(prix_achat[c]))
+            Ref = []
+            prix = []
+            prix_achat = []
+            marque = []
+            modele = []
+            cpu = []
+            ram = []
+            gpu = []
+            stockage = []
+            batterie = []
+            en_stock = []
+            vendu = []
+            commande = []
+            fournisseur = []
+            dernier_achat = []
+            commentaire = []
+
+            for product in products.find({"commande": f"{orderref}"}):
+                Ref.append(product['Ref'])
+                prix.append(product['prix'])
+                try:
+                    prix_achat.append(product['prix_achat'])
+                except KeyError:
+                    prix_achat.append('')
+                marque.append(product['marque'])
+                modele.append(product['modele'])
+                cpu.append(product['cpu'])
+                ram.append(product['ram'])
+                gpu.append(product['gpu'])
+                stockage.append(product['stockage'])
+                batterie.append(product['batterie'])
+                try:    
+                    en_stock.append(product['en_stock'])
+                except KeyError:
+                    en_stock.append('')
+
+                try:    
+                    vendu.append(product['vendu'])
+                except KeyError:
+                    vendu.append('')
+
+                commande.append(product['commande'])
+
+                try:    
+                    fournisseur.append(product['fournisseur'])
+                except KeyError:
+                    fournisseur.append('')
+
+                try:    
+                    dernier_achat.append(product['dernier_achat'])
+                except KeyError:
+                    dernier_achat.append('')
+
+                try:    
+                    commentaire.append(product['commentaire'])
+                except KeyError:
+                    commentaire.append('****')
+
+            sum_purchase_price = []
+            sum_sold_list = []
+            sold_items = []
+            in_stock_items = []
+            in_stock_items_price = []
+
+            for c, v in enumerate(Ref):
+                _stocks['Ref'][c] = Ref[c]
+                _stocks['designation'][c] = f"{marque[c]} {modele[c]} | {cpu[c]} | {ram[c]}GB\n{stockage[c]} | {gpu[c]} | {batterie[c]}"
+                _stocks['prix'][c] = prix[c]
+                _stocks['prix_achat'][c] = prix_achat[c]
+                _stocks['en_stock'][c] = en_stock[c]
+                _stocks['vendu'][c] = vendu[c]
+                _stocks['commande'][c] = commande[c]
+                _stocks['dernier_achat'][c] = dernier_achat[c]
+                _stocks['commentaire'][c] = commentaire[c]
+                _stocks['fournisseur'][c] = fournisseur[c]
             
-            if int(en_stock[c]) >= 1:
-                in_stock_items_price.append(int(en_stock[c])*float(prix_achat[c]))
-                in_stock_items.append(int(en_stock[c]))
-                sum_purchase_price.append(int(en_stock[c])*float(prix_achat[c]))
+                if vendu[c] == '':
+                    vendu[c] = 0
+
+                if en_stock[c] == '':
+                    en_stock[c] = 0
+
+                if int(vendu[c]) >= 1:
+                    sum_sold_list.append(int(vendu[c])*float(prix[c]))
+                    sold_items.append(int(vendu[c]))
+                    sum_purchase_price.append(int(vendu[c])*float(prix_achat[c]))
+
+                if int(en_stock[c]) >= 1:
+                    in_stock_items_price.append(int(en_stock[c])*float(prix_achat[c]))
+                    in_stock_items.append(int(en_stock[c]))
+                    sum_purchase_price.append(int(en_stock[c])*float(prix_achat[c]))
+
+            products = _stocks
+            prod_table  = DataTable(table=products)
+            order_scrn.add_widget(prod_table)
             
-            _stocks['Ref'][c] = Ref[c]
-            _stocks['designation'][c] = f"{marque[c]} {modele[c]} | {cpu[c]} | {ram[c]}GB\n{stockage[c]} | {gpu[c]} | {batterie[c]}"
-            _stocks['prix'][c] = prix[c]
-            _stocks['prix_achat'][c] = prix_achat[c]
-            _stocks['en_stock'][c] = en_stock[c]
-            _stocks['vendu'][c] = vendu[c]
-            _stocks['commande'][c] = commande[c]
-            _stocks['fournisseur'][c] = fournisseur[c]
-            _stocks['dernier_achat'][c] = dernier_achat[c]
-            _stocks['commentaire'][c] = commentaire[c]
-        
-        products = _stocks
-        prod_table  = DataTable(table=products)
-        order_scrn.add_widget(prod_table)
-        
-        # key numbers
-        total_order_price = sum(sum_purchase_price)
-        in_stock_items = sum(in_stock_items)
-        in_stock_items_price = sum(in_stock_items_price)
-        sold_items = sum(sold_items)
-        sold_products_price = float(sum(sum_sold_list))
-        profit = sold_products_price-total_order_price
-        
-        totalorderpricelabel = Label(text=f'Prix Du Commande:\n{total_order_price}', bold=True, color=(0,0,0,1))
-        instockitemslabel = Label(text=f'Produits en stock:\n{in_stock_items}', bold=True, color=(0,0,0,1))
-        instockitemspricelabel = Label(text=f'Prix des produits en stock:\n{in_stock_items_price}', bold=True, color=(0,0,0,1))
-        solditemslabel = Label(text=f'Produits Vendu:\n{sold_items}', bold=True, color=(0,0,0,1))
-        soldproductspricelabel = Label(text=f'Prix des produits Vendu:\n{sold_products_price}', bold=True, color=(0,0,0,1))
-        profitlabel = Label(text=f'Profit:\n{profit}', bold=True, color=(0,0,0,1))
-        
-        stats.add_widget(totalorderpricelabel)
-        stats.add_widget(instockitemslabel)
-        stats.add_widget(instockitemspricelabel)
-        stats.add_widget(solditemslabel)
-        stats.add_widget(soldproductspricelabel)
-        stats.add_widget(profitlabel)
-        
+            # key numbers
+            total_order_price = sum(sum_purchase_price)
+            in_stock_items = sum(in_stock_items)
+            in_stock_items_price = sum(in_stock_items_price)
+            sold_items = sum(sold_items)
+            sold_products_price = float(sum(sum_sold_list))
+            profit = sold_products_price-total_order_price
+
+            totalorderpricelabel = Label(text=f'Prix Totale:\n{total_order_price} DH', bold=True, color=(0,0,0,1))
+            instockitemslabel = Label(text=f'Produits en stock:\n{in_stock_items}', bold=True, color=(0,0,0,1))
+            instockitemspricelabel = Label(text=f'Prix des produits en stock:\n{in_stock_items_price} DH', bold=True, color=(0,0,0,1))
+            solditemslabel = Label(text=f'Produits Vendu:\n{sold_items}', bold=True, color=(0,0,0,1))
+            soldproductspricelabel = Label(text=f'Prix des produits Vendu:\n{sold_products_price} DH', bold=True, color=(0,0,0,1))
+            profitlabel = Label(text=f'Profit:\n{profit} DH', bold=True, color=(0,0,0,1))
+
+            stats.add_widget(totalorderpricelabel)
+            stats.add_widget(instockitemslabel)
+            stats.add_widget(instockitemspricelabel)
+            stats.add_widget(solditemslabel)
+            stats.add_widget(soldproductspricelabel)
+            stats.add_widget(profitlabel)
         return _stocks
 
 
-    def get_supp(self):
-        supp = self.ids.supplier_id.text
-        if supp == '':
+    def get_supp(self, for_export=False):
+        orderref = self.ids.supplier_id.text
+        if orderref == '':
             return 0
+        products = self.products
+
         
-        stats = self.ids.scrn_supplier_stats
-        order_scrn = self.ids.scrn_supplier_contents
-        order_scrn.clear_widgets()
-        stats.clear_widgets()
-        
-        _stocks = {}
-        _stocks['Ref'] = {}
-        _stocks['designation'] = {}
-        _stocks['prix'] = {}
-        _stocks['prix_achat'] = {}
-        _stocks['en_stock'] = {}
-        _stocks['vendu'] = {}
-        _stocks['commande'] = {}
-        _stocks['fournisseur'] = {}
-        _stocks['dernier_achat'] = {}
-        _stocks['commentaire'] = {}
-        Ref = []
-        prix = []
-        prix_achat = []
-        marque = []
-        modele = []
-        cpu = []
-        ram = []
-        gpu = []
-        stockage = []
-        batterie = []
-        en_stock = []
-        vendu = []
-        commande = []
-        fournisseur = []
-        dernier_achat = []
-        commentaire = []
-        
-        for product in self.products.find({"fournisseur": f"{supp}"}):
-            Ref.append(product['Ref'])
-            prix.append(float(product['prix']))
+        if for_export:
+            _stocks = {}
+            _stocks['Ref'] = {}
+            _stocks['marque'] = {}
+            _stocks['modele'] = {}
+            _stocks['cpu'] = {}
+            _stocks['ram'] = {}
+            _stocks['stockage'] = {}
+            _stocks['gpu'] = {}
+            _stocks['batterie'] = {}
+            _stocks['prix'] = {}
+            _stocks['prix_achat'] = {}
+            _stocks['en_stock'] = {}
+            _stocks['vendu'] = {}
+            _stocks['commande'] = {}
+            _stocks['fournisseur'] = {}
+            _stocks['dernier_achat'] = {}
+            _stocks['commentaire'] = {}
 
-            try:
-                prix_achat.append(float(product['prix_achat']))
-            except KeyError:
-                prix_achat.append(0)
+            Ref = []
+            prix = []
+            prix_achat = []
+            marque = []
+            modele = []
+            cpu = []
+            ram = []
+            gpu = []
+            stockage = []
+            batterie = []
+            en_stock = []
+            vendu = []
+            commande = []
+            fournisseur = []
+            dernier_achat = []
+            commentaire = []
 
-            marque.append(product['marque'])
-            modele.append(product['modele'])
-            cpu.append(product['cpu'])
-            ram.append(product['ram'])
-            gpu.append(product['gpu'])
-            stockage.append(product['stockage'])
-            batterie.append(product['batterie'])
+            for product in products.find({"fournisseur": f"{orderref}"}):
+                Ref.append(product['Ref'])
+                prix.append(product['prix'])
+                try:
+                    prix_achat.append(product['prix_achat'])
+                except KeyError:
+                    prix_achat.append('')
+                marque.append(product['marque'])
+                modele.append(product['modele'])
+                cpu.append(product['cpu'])
+                ram.append(product['ram'])
+                gpu.append(product['gpu'])
+                stockage.append(product['stockage'])
+                batterie.append(product['batterie'])
+                try:    
+                    en_stock.append(product['en_stock'])
+                except KeyError:
+                    en_stock.append('')
 
-            try:    
-                en_stock.append(product['en_stock'])
-            except KeyError:
-                en_stock.append('')
+                try:    
+                    vendu.append(product['vendu'])
+                except KeyError:
+                    vendu.append('')
 
-            try:    
-                vendu.append(product['vendu'])
-            except KeyError:
-                vendu.append('')
+                commande.append(product['commande'])
 
-            commande.append(product['commande'])
+                try:    
+                    fournisseur.append(product['fournisseur'])
+                except KeyError:
+                    fournisseur.append('')
+
+                try:    
+                    dernier_achat.append(product['dernier_achat'])
+                except KeyError:
+                    dernier_achat.append('')
+
+                try:    
+                    commentaire.append(product['commentaire'])
+                except KeyError:
+                    commentaire.append('****')
+
+            sum_purchase_price = []
+            sum_sold_list = []
+            sold_items = []
+            in_stock_items = []
+            in_stock_items_price = []
+
+            for c, v in enumerate(Ref):
+                _stocks['Ref'][c] = Ref[c]
+                _stocks['marque'][c] = marque[c]
+                _stocks['modele'][c] = modele[c]
+                _stocks['cpu'][c] = cpu[c]
+                _stocks['ram'][c] = ram[c]
+                _stocks['stockage'][c] = stockage[c]
+                _stocks['gpu'][c] = gpu[c]
+                _stocks['batterie'][c] = batterie[c]
+                _stocks['prix'][c] = prix[c]
+                _stocks['prix_achat'][c] = prix_achat[c]
+                _stocks['en_stock'][c] = en_stock[c]
+                _stocks['vendu'][c] = vendu[c]
+                _stocks['commande'][c] = commande[c]
+                _stocks['dernier_achat'][c] = dernier_achat[c]
+                _stocks['commentaire'][c] = commentaire[c]
+                _stocks['fournisseur'][c] = fournisseur[c]
             
-            try:    
-                fournisseur.append(product['fournisseur'])
-            except KeyError:
-                fournisseur.append('')
+                if vendu[c] == '':
+                    vendu[c] = 0
 
-            try:    
-                dernier_achat.append(product['dernier_achat'])
-            except KeyError:
-                dernier_achat.append('')
-                
-            try:    
-                commentaire.append(product['commentaire'])
-            except KeyError:
-                commentaire.append('')
+                if en_stock[c] == '':
+                    en_stock[c] = 0
+        else:
+            stats = self.ids.scrn_supplier_stats
+            order_scrn = self.ids.scrn_supplier_contents
+            order_scrn.clear_widgets()
+            stats.clear_widgets()
+            _stocks = {}
+            _stocks['Ref'] = {}
+            _stocks['designation'] = {}
+            _stocks['prix'] = {}
+            _stocks['prix_achat'] = {}
+            _stocks['en_stock'] = {}
+            _stocks['vendu'] = {}
+            _stocks['commande'] = {}
+            _stocks['fournisseur'] = {}
+            _stocks['dernier_achat'] = {}
+            _stocks['commentaire'] = {}
 
-        sum_purchase_price = []
-        sum_sold_list = []
-        sold_items = []
-        in_stock_items = []
-        in_stock_items_price = []
-        
-        for c, v in enumerate(Ref):
-            if int(vendu[c]) >= 1:
-                sum_sold_list.append(int(vendu[c])*float(prix[c]))
-                sold_items.append(int(vendu[c]))
-                sum_purchase_price.append(int(vendu[c])*float(prix_achat[c]))
+            Ref = []
+            prix = []
+            prix_achat = []
+            marque = []
+            modele = []
+            cpu = []
+            ram = []
+            gpu = []
+            stockage = []
+            batterie = []
+            en_stock = []
+            vendu = []
+            commande = []
+            fournisseur = []
+            dernier_achat = []
+            commentaire = []
+
+            for product in products.find({"fournisseur": f"{orderref}"}):
+                Ref.append(product['Ref'])
+                prix.append(product['prix'])
+                try:
+                    prix_achat.append(product['prix_achat'])
+                except KeyError:
+                    prix_achat.append('')
+                marque.append(product['marque'])
+                modele.append(product['modele'])
+                cpu.append(product['cpu'])
+                ram.append(product['ram'])
+                gpu.append(product['gpu'])
+                stockage.append(product['stockage'])
+                batterie.append(product['batterie'])
+                try:    
+                    en_stock.append(product['en_stock'])
+                except KeyError:
+                    en_stock.append('')
+
+                try:    
+                    vendu.append(product['vendu'])
+                except KeyError:
+                    vendu.append('')
+
+                commande.append(product['commande'])
+
+                try:    
+                    fournisseur.append(product['fournisseur'])
+                except KeyError:
+                    fournisseur.append('')
+
+                try:    
+                    dernier_achat.append(product['dernier_achat'])
+                except KeyError:
+                    dernier_achat.append('')
+
+                try:    
+                    commentaire.append(product['commentaire'])
+                except KeyError:
+                    commentaire.append('****')
+
+            sum_purchase_price = []
+            sum_sold_list = []
+            sold_items = []
+            in_stock_items = []
+            in_stock_items_price = []
+
+            for c, v in enumerate(Ref):
+                _stocks['Ref'][c] = Ref[c]
+                _stocks['designation'][c] = f"{marque[c]} {modele[c]} | {cpu[c]} | {ram[c]}GB\n{stockage[c]} | {gpu[c]} | {batterie[c]}"
+                _stocks['prix'][c] = prix[c]
+                _stocks['prix_achat'][c] = prix_achat[c]
+                _stocks['en_stock'][c] = en_stock[c]
+                _stocks['vendu'][c] = vendu[c]
+                _stocks['commande'][c] = commande[c]
+                _stocks['dernier_achat'][c] = dernier_achat[c]
+                _stocks['commentaire'][c] = commentaire[c]
+                _stocks['fournisseur'][c] = fournisseur[c]
             
-            if int(en_stock[c]) >= 1:
-                in_stock_items_price.append(int(en_stock[c])*float(prix_achat[c]))
-                in_stock_items.append(int(en_stock[c]))
-                sum_purchase_price.append(int(en_stock[c])*float(prix_achat[c]))
+                if vendu[c] == '':
+                    vendu[c] = 0
+
+                if en_stock[c] == '':
+                    en_stock[c] = 0
+
+                if int(vendu[c]) >= 1:
+                    sum_sold_list.append(int(vendu[c])*float(prix[c]))
+                    sold_items.append(int(vendu[c]))
+                    sum_purchase_price.append(int(vendu[c])*float(prix_achat[c]))
+
+                if int(en_stock[c]) >= 1:
+                    in_stock_items_price.append(int(en_stock[c])*float(prix_achat[c]))
+                    in_stock_items.append(int(en_stock[c]))
+                    sum_purchase_price.append(int(en_stock[c])*float(prix_achat[c]))
+
+            products = _stocks
+            prod_table  = DataTable(table=products)
+            order_scrn.add_widget(prod_table)
             
-            _stocks['Ref'][c] = Ref[c]
-            _stocks['designation'][c] = f"{marque[c]} {modele[c]} | {cpu[c]} | {ram[c]}GB\n{stockage[c]} | {gpu[c]} | {batterie[c]}"
-            _stocks['prix'][c] = prix[c]
-            _stocks['prix_achat'][c] = prix_achat[c]
-            _stocks['en_stock'][c] = en_stock[c]
-            _stocks['vendu'][c] = vendu[c]
-            _stocks['commande'][c] = commande[c]
-            _stocks['fournisseur'][c] = fournisseur[c]
-            _stocks['dernier_achat'][c] = dernier_achat[c]
-            _stocks['commentaire'][c] = commentaire[c]
-        
-        products = _stocks
-        prod_table  = DataTable(table=products)
-        order_scrn.add_widget(prod_table)
-        
-        # key numbers
-        total_order_price = sum(sum_purchase_price)
-        in_stock_items = sum(in_stock_items)
-        in_stock_items_price = sum(in_stock_items_price)
-        sold_items = sum(sold_items)
-        sold_products_price = float(sum(sum_sold_list))
-        profit = sold_products_price-total_order_price
-        
-        totalorderpricelabel = Label(text=f'Importé depuis ce fournisseur:\n{total_order_price} DH', bold=True, color=(0,0,0,1))
-        instockitemslabel = Label(text=f'Produits en stock:\n{in_stock_items}', bold=True, color=(0,0,0,1))
-        instockitemspricelabel = Label(text=f'Prix des produits en stock:\n{in_stock_items_price} DH', bold=True, color=(0,0,0,1))
-        solditemslabel = Label(text=f'Produits Vendu:\n{sold_items}', bold=True, color=(0,0,0,1))
-        soldproductspricelabel = Label(text=f'Prix des produits Vendu:\n{sold_products_price} DH', bold=True, color=(0,0,0,1))
-        profitlabel = Label(text=f'Profit:\n{profit}', bold=True, color=(0,0,0,1))
-        
-        stats.add_widget(totalorderpricelabel)
-        stats.add_widget(instockitemslabel)
-        stats.add_widget(instockitemspricelabel)
-        stats.add_widget(solditemslabel)
-        stats.add_widget(soldproductspricelabel)
-        stats.add_widget(profitlabel)
-        
+            # key numbers
+            total_order_price = sum(sum_purchase_price)
+            in_stock_items = sum(in_stock_items)
+            in_stock_items_price = sum(in_stock_items_price)
+            sold_items = sum(sold_items)
+            sold_products_price = float(sum(sum_sold_list))
+            profit = sold_products_price-total_order_price
+
+            totalorderpricelabel = Label(text=f'Prix Totale:\n{total_order_price} DH', bold=True, color=(0,0,0,1))
+            instockitemslabel = Label(text=f'Produits en stock:\n{in_stock_items}', bold=True, color=(0,0,0,1))
+            instockitemspricelabel = Label(text=f'Prix des produits en stock:\n{in_stock_items_price} DH', bold=True, color=(0,0,0,1))
+            solditemslabel = Label(text=f'Produits Vendu:\n{sold_items}', bold=True, color=(0,0,0,1))
+            soldproductspricelabel = Label(text=f'Prix des produits Vendu:\n{sold_products_price} DH', bold=True, color=(0,0,0,1))
+            profitlabel = Label(text=f'Profit:\n{profit} DH', bold=True, color=(0,0,0,1))
+
+            stats.add_widget(totalorderpricelabel)
+            stats.add_widget(instockitemslabel)
+            stats.add_widget(instockitemspricelabel)
+            stats.add_widget(solditemslabel)
+            stats.add_widget(soldproductspricelabel)
+            stats.add_widget(profitlabel)
         return _stocks
 
 
@@ -719,129 +941,37 @@ class AdminWindow(BoxLayout):
             return 0
         
         
-        _stocks = {}
-
-        _stocks['Ref'] = {}
-        _stocks['marque'] = {}
-        _stocks['modele'] = {}
-        _stocks['cpu'] = {}
-        _stocks['ram'] = {}
-        _stocks['stockage'] = {}
-        _stocks['gpu'] = {}
-        _stocks['batterie'] = {}
-        _stocks['prix'] = {}
-        _stocks['prix_achat'] = {}
-        _stocks['en_stock'] = {}
-        _stocks['vendu'] = {}
-        _stocks['commande'] = {}
-        _stocks['dernier_achat'] = {}
-
-        Ref = []
-        prix = []
-        prix_achat = []
-        marque = []
-        modele = []
-        cpu = []
-        ram = []
-        gpu = []
-        stockage = []
-        batterie = []
-        en_stock = []
-        vendu = []
-        commande = []
-        dernier_achat = []
-
-        for product in self.products.find():
-            Ref.append(product['Ref'])
-            prix.append(product['prix'])
-            try:
-                prix_achat.append(product['prix_achat'])
-            except KeyError:
-                prix_achat.append('')
-            marque.append(product['marque'])
-            modele.append(product['modele'])
-            cpu.append(product['cpu'])
-            ram.append(product['ram'])
-            gpu.append(product['gpu'])
-            stockage.append(product['stockage'])
-            batterie.append(product['batterie'])
-            try:    
-                en_stock.append(product['en_stock'])
-            except KeyError:
-                en_stock.append('')
-
-            try:    
-                vendu.append(product['vendu'])
-            except KeyError:
-                vendu.append('')
-
-            commande.append(product['commande'])
-
-            try:    
-                dernier_achat.append(product['dernier_achat'])
-            except KeyError:
-                dernier_achat.append('')
-
-
-        for c, v in enumerate(Ref):
-            _stocks['Ref'][c] = Ref[c]
-
-            _stocks['modele'][c] = modele[c]
-            _stocks['marque'][c] = marque[c]
-            _stocks['cpu'][c] = cpu[c]
-            _stocks['ram'][c] = ram[c]
-            _stocks['stockage'][c] = stockage[c]
-            _stocks['gpu'][c] = gpu[c]
-            _stocks['batterie'][c] = batterie[c]
-
-            _stocks['prix'][c] = prix[c]
-            _stocks['prix_achat'][c] = prix_achat[c]
-            _stocks['en_stock'][c] = en_stock[c]
-            _stocks['vendu'][c] = vendu[c]
-            _stocks['commande'][c] = commande[c]
-            _stocks['dernier_achat'][c] = dernier_achat[c]
+        _stocks = self.get_order(for_export=True)
 
         titles = _stocks.keys()
         titles = list(titles)
 
-        titles2 = ['Réf', 'Marque', 'Modèle', 'CPU', 'RAM', 'Stockage', 'GPU', 'Batterie',
-            'Prix', "Prix d'achat", 'En Stock', 'Vendu', 'Commande', 'Dernier Achat']
+        titles2 = ['Ref', 'Marque', 'Modele', 'CPU', 'RAM', 'Stockage', 'GPU', 'Batterie', 'Prix De Vente',
+                   "Prix D'achat", 'En stock', 'Vendu', 'Commande', 'Fournisseur', 'Dernier Achat',
+                   'Commentaire']
 
         product = []
         all_products = []
 
         for c, v in enumerate(_stocks['Ref']):
-            product.append(_stocks[titles[0]][c])
-            product.append(_stocks[titles[1]][c])
-            product.append(_stocks[titles[2]][c])
-            product.append(_stocks[titles[3]][c])
-            product.append(_stocks[titles[4]][c])
-            product.append(_stocks[titles[5]][c])
-            product.append(_stocks[titles[6]][c])
-            product.append(_stocks[titles[7]][c])
-            product.append(_stocks[titles[8]][c])
-            product.append(_stocks[titles[9]][c])
-            product.append(int(_stocks[titles[10]][c]))
-            product.append(_stocks[titles[11]][c])
-            product.append(_stocks[titles[12]][c])
-            product.append(_stocks[titles[13]][c])
+            for count, value in enumerate(titles):
+                product.append(_stocks[titles[count]][c])
             all_products.append(product)
             product = []
 
-
-        if enstock == True:   
+        if enstock == True:
             filename = f'/en-stock-{orderref}-'
             filtered = []
             for i in all_products:
-                if int(i[10]) >= 1 and i[12] == orderref:
-                    filtered.append(i)
+                try:
+                    if int(i[10]) >= 1:
+                        filtered.append(i)
+                except ValueError:
+                    i[10] = 0 
+                    if int(i[10]) >= 1:
+                        filtered.append(i)
             all_products = filtered
-        else:
-            filtered = []
-            for i in all_products:
-                if i[12] == orderref:
-                    filtered.append(i)
-            all_products = filtered
+        else: 
             filename = f'/tous-{orderref}-'
 
         all_products.insert(0, titles2)
@@ -863,121 +993,93 @@ class AdminWindow(BoxLayout):
         return 0
 
 
-    def rt_xlsx(self, enstock=False):
+    def export_supp_xlsx(self, enstock=False):
+        orderref = self.ids.supplier_id.text
+        if orderref == '':
+            return 0
+        
         path = tkinter.filedialog.askdirectory()
         if path == '':
             return 0
         
-        _stocks = {}
-
-        _stocks['Ref'] = {}
-        _stocks['marque'] = {}
-        _stocks['modele'] = {}
-        _stocks['cpu'] = {}
-        _stocks['ram'] = {}
-        _stocks['stockage'] = {}
-        _stocks['gpu'] = {}
-        _stocks['batterie'] = {}
-        _stocks['prix'] = {}
-        _stocks['prix_achat'] = {}
-        _stocks['en_stock'] = {}
-        _stocks['vendu'] = {}
-        _stocks['commande'] = {}
-        _stocks['dernier_achat'] = {}
-
-        Ref = []
-        prix = []
-        prix_achat = []
-        marque = []
-        modele = []
-        cpu = []
-        ram = []
-        gpu = []
-        stockage = []
-        batterie = []
-        en_stock = []
-        vendu = []
-        commande = []
-        dernier_achat = []
-
-        for product in self.products.find():
-            Ref.append(product['Ref'])
-            prix.append(product['prix'])
-            try:
-                prix_achat.append(product['prix_achat'])
-            except KeyError:
-                prix_achat.append('')
-            marque.append(product['marque'])
-            modele.append(product['modele'])
-            cpu.append(product['cpu'])
-            ram.append(product['ram'])
-            gpu.append(product['gpu'])
-            stockage.append(product['stockage'])
-            batterie.append(product['batterie'])
-            try:    
-                en_stock.append(product['en_stock'])
-            except KeyError:
-                en_stock.append('')
-    
-            try:    
-                vendu.append(product['vendu'])
-            except KeyError:
-                vendu.append('')
-
-            commande.append(product['commande'])
-
-            try:    
-                dernier_achat.append(product['dernier_achat'])
-            except KeyError:
-                dernier_achat.append('')
-
-
-        for c, v in enumerate(Ref):
-            _stocks['Ref'][c] = Ref[c]
-
-            _stocks['modele'][c] = modele[c]
-            _stocks['marque'][c] = marque[c]
-            _stocks['cpu'][c] = cpu[c]
-            _stocks['ram'][c] = ram[c]
-            _stocks['stockage'][c] = stockage[c]
-            _stocks['gpu'][c] = gpu[c]
-            _stocks['batterie'][c] = batterie[c]
-
-            _stocks['prix'][c] = prix[c]
-            _stocks['prix_achat'][c] = prix_achat[c]
-            _stocks['en_stock'][c] = en_stock[c]
-            _stocks['vendu'][c] = vendu[c]
-            _stocks['commande'][c] = commande[c]
-            _stocks['dernier_achat'][c] = dernier_achat[c]
+        
+        _stocks = self.get_supp(for_export=True)
 
         titles = _stocks.keys()
+        print(titles)
         titles = list(titles)
 
-        titles2 = ['Réf', 'Marque', 'Modèle', 'CPU', 'RAM', 'Stockage', 'GPU', 'Batterie',
-            'Prix', "Prix d'achat", 'En Stock', 'Vendu', 'Commande', 'Dernier Achat']
+        titles2 = ['Ref', 'Marque', 'Modele', 'CPU', 'RAM', 'Stockage', 'GPU', 'Batterie', 'Prix De Vente',
+                   "Prix D'achat", 'En stock', 'Vendu', 'Commande', 'Fournisseur', 'Dernier Achat',
+                   'Commentaire']
 
         product = []
         all_products = []
 
         for c, v in enumerate(_stocks['Ref']):
-            product.append(_stocks[titles[0]][c])
-            product.append(_stocks[titles[1]][c])
-            product.append(_stocks[titles[2]][c])
-            product.append(_stocks[titles[3]][c])
-            product.append(_stocks[titles[4]][c])
-            product.append(_stocks[titles[5]][c])
-            product.append(_stocks[titles[6]][c])
-            product.append(_stocks[titles[7]][c])
-            product.append(_stocks[titles[8]][c])
-            product.append(_stocks[titles[9]][c])
-            product.append(int(_stocks[titles[10]][c]))
-            product.append(_stocks[titles[11]][c])
-            product.append(_stocks[titles[12]][c])
-            product.append(_stocks[titles[13]][c])
+            for count, value in enumerate(titles):
+                product.append(_stocks[titles[count]][c])
+            all_products.append(product)
+            product = []
+
+        if enstock == True:
+            filename = f'/en-stock-{orderref}-'
+            filtered = []
+            for i in all_products:
+                try:
+                    if int(i[10]) >= 1:
+                        filtered.append(i)
+                except ValueError:
+                    i[10] = 0
+            all_products = filtered
+        else: 
+            filename = f'/tous-{orderref}-'
+
+        all_products.insert(0, titles2)
+
+        wb = openpyxl.Workbook()
+        ws_write = wb.worksheets[0]
+
+        for p in all_products:
+            ws_write.append(p)
+
+        today = datetime.today().strftime("%d-%m-%Y")
+        wb.save(filename=f'{path}{filename}{today}.xlsx')
+        
+        if enstock:
+            self.success_popup('les produits en stock ont été exportés')
+        else:
+            self.success_popup('Tous les produits ont été exportés')
+        
+        return 0
+
+
+
+
+    def export_xlsx(self, enstock=False):
+        path = tkinter.filedialog.askdirectory()
+        if path == '':
+            return 0
+        
+        _stocks = self.get_products(for_export=True)
+        
+        titles = _stocks.keys()
+        titles = list(titles)
+
+        titles2 = ['Ref', 'Marque', 'Modele', 'CPU', 'RAM', 'Stockage', 'GPU', 'Batterie', 'Prix De Vente',
+                   "Prix D'achat", 'En stock', 'Vendu', 'Commande', 'Fournisseur', 'Dernier Achat',
+                   'Commentaire']
+
+        product = []
+        all_products = []
+
+        for c, v in enumerate(_stocks['Ref']):
+            for count, value in enumerate(titles):
+                product.append(_stocks[titles[count]][c])
             all_products.append(product)
             product = []
             
-        if enstock == True:   
+        if enstock == True:
             filename = '/en-stock-'
             filtered = []
             for i in all_products:
@@ -1020,17 +1122,34 @@ class AdminWindow(BoxLayout):
         
         
         df = read_excel(path)
-
+        
+        df['en_stock'] = df['en_stock'].fillna(0)
+        
+        df['vendu'] = df['en_stock']
+        df['prix'] = df['en_stock']
+        df['dernier_achat'] = df['en_stock']
         df['gpu'] = df['gpu'].fillna('STANDARD')
-        df['prix_achat'] = df['prix_achat'].fillna(0)
-        df['vendu'] = df['vendu'].fillna(0)
         df['dernier_achat'] = df['dernier_achat'].fillna('N/A')
+        df['commentaire'] = df['commentaire'].fillna('N/A')
         df['batterie'] = df['batterie'].fillna('Bien')
+        df['taux_de_change'] = df['taux_de_change'].fillna(1)
+        
+        
+        
+        to_numeric(df['vendu'])
+        to_numeric(df['taux_de_change'])
+        to_numeric(df['en_stock'])
+        
+        df['prix_achat'] = df['prix_achat']*df['taux_de_change']
+            
 
         data = df.to_dict(orient="records")
 
         for record in data:
             record['Ref'] = self.gen_ref(record['marque'])
+            record['prix'] = 0
+            record['vendu'] = 0
+            record['dernier_achat'] = ''
 
         self.products.insert_many(data)
         
@@ -1102,134 +1221,244 @@ class AdminWindow(BoxLayout):
         return _users
 
     
-    def get_products(self):
+    def get_products(self, for_export=False):
         products = self.products
         
-        stats = self.ids.scrn_product_stats
-        stats.clear_widgets()
-        
-        _stocks = {}
-        _stocks['Ref'] = {}
-        _stocks['designation'] = {}
-        _stocks['prix'] = {}
-        _stocks['prix_achat'] = {}
-        _stocks['en_stock'] = {}
-        _stocks['vendu'] = {}
-        _stocks['commande'] = {}
-        _stocks['fournisseur'] = {}
-        _stocks['dernier_achat'] = {}
-        _stocks['commentaire'] = {}
+        if for_export:
+            _stocks = {}
+            _stocks['Ref'] = {}
+            _stocks['marque'] = {}
+            _stocks['modele'] = {}
+            _stocks['cpu'] = {}
+            _stocks['ram'] = {}
+            _stocks['stockage'] = {}
+            _stocks['gpu'] = {}
+            _stocks['batterie'] = {}
+            _stocks['prix'] = {}
+            _stocks['prix_achat'] = {}
+            _stocks['en_stock'] = {}
+            _stocks['vendu'] = {}
+            _stocks['commande'] = {}
+            _stocks['fournisseur'] = {}
+            _stocks['dernier_achat'] = {}
+            _stocks['commentaire'] = {}
 
-        Ref = []
-        prix = []
-        prix_achat = []
-        marque = []
-        modele = []
-        cpu = []
-        ram = []
-        gpu = []
-        stockage = []
-        batterie = []
-        en_stock = []
-        vendu = []
-        commande = []
-        fournisseur = []
-        dernier_achat = []
-        commentaire = []
+            Ref = []
+            prix = []
+            prix_achat = []
+            marque = []
+            modele = []
+            cpu = []
+            ram = []
+            gpu = []
+            stockage = []
+            batterie = []
+            en_stock = []
+            vendu = []
+            commande = []
+            fournisseur = []
+            dernier_achat = []
+            commentaire = []
 
-        for product in products.find():
-            Ref.append(product['Ref'])
-            prix.append(product['prix'])
-            try:
-                prix_achat.append(product['prix_achat'])
-            except KeyError:
-                prix_achat.append('')
-            marque.append(product['marque'])
-            modele.append(product['modele'])
-            cpu.append(product['cpu'])
-            ram.append(product['ram'])
-            gpu.append(product['gpu'])
-            stockage.append(product['stockage'])
-            batterie.append(product['batterie'])
-            try:    
-                en_stock.append(product['en_stock'])
-            except KeyError:
-                en_stock.append('')
-            
-            try:    
-                vendu.append(product['vendu'])
-            except KeyError:
-                vendu.append('')
-            
-            commande.append(product['commande'])
-            
-            try:    
-                fournisseur.append(product['fournisseur'])
-            except KeyError:
-                fournisseur.append('')
-            
-            try:    
-                dernier_achat.append(product['dernier_achat'])
-            except KeyError:
-                dernier_achat.append('')
-                
-            try:    
-                commentaire.append(product['commentaire'])
-            except KeyError:
-                commentaire.append('****')
-                
-        sum_purchase_price = []
-        sum_sold_list = []
-        sold_items = []
-        in_stock_items = []
-        in_stock_items_price = []
-                        
-        for c, v in enumerate(Ref):
-            _stocks['Ref'][c] = Ref[c]
-            _stocks['designation'][c] = f"{marque[c]} {modele[c]} | {cpu[c]} | {ram[c]}GB\n{stockage[c]} | {gpu[c]} | {batterie[c]}"
-            _stocks['prix'][c] = prix[c]
-            _stocks['prix_achat'][c] = prix_achat[c]
-            _stocks['en_stock'][c] = en_stock[c]
-            _stocks['vendu'][c] = vendu[c]
-            _stocks['commande'][c] = commande[c]
-            _stocks['dernier_achat'][c] = dernier_achat[c]
-            _stocks['commentaire'][c] = commentaire[c]
-            _stocks['fournisseur'][c] = fournisseur[c]
-            
-            if vendu[c] == '':
-                vendu[c] = 0
-            if int(vendu[c]) >= 1:
-                sum_sold_list.append(int(vendu[c])*float(prix[c]))
-                sold_items.append(int(vendu[c]))
-                sum_purchase_price.append(int(vendu[c])*float(prix_achat[c]))
-            
-            if int(en_stock[c]) >= 1:
-                in_stock_items_price.append(int(en_stock[c])*float(prix_achat[c]))
-                in_stock_items.append(int(en_stock[c]))
-                sum_purchase_price.append(int(en_stock[c])*float(prix_achat[c]))
+            for product in products.find():
+                Ref.append(product['Ref'])
+                prix.append(product['prix'])
+                try:
+                    prix_achat.append(product['prix_achat'])
+                except KeyError:
+                    prix_achat.append('')
+                marque.append(product['marque'])
+                modele.append(product['modele'])
+                cpu.append(product['cpu'])
+                ram.append(product['ram'])
+                gpu.append(product['gpu'])
+                stockage.append(product['stockage'])
+                batterie.append(product['batterie'])
+                try:    
+                    en_stock.append(product['en_stock'])
+                except KeyError:
+                    en_stock.append('')
 
-        # key numbers
-        total_order_price = sum(sum_purchase_price)
-        in_stock_items = sum(in_stock_items)
-        in_stock_items_price = sum(in_stock_items_price)
-        sold_items = sum(sold_items)
-        sold_products_price = float(sum(sum_sold_list))
-        profit = sold_products_price-total_order_price
-        
-        totalorderpricelabel = Label(text=f'Prix Totale:\n{total_order_price} DH', bold=True, color=(0,0,0,1))
-        instockitemslabel = Label(text=f'Produits en stock:\n{in_stock_items}', bold=True, color=(0,0,0,1))
-        instockitemspricelabel = Label(text=f'Prix des produits en stock:\n{in_stock_items_price} DH', bold=True, color=(0,0,0,1))
-        solditemslabel = Label(text=f'Produits Vendu:\n{sold_items}', bold=True, color=(0,0,0,1))
-        soldproductspricelabel = Label(text=f'Prix des produits Vendu:\n{sold_products_price} DH', bold=True, color=(0,0,0,1))
-        profitlabel = Label(text=f'Profit:\n{profit} DH', bold=True, color=(0,0,0,1))
-        
-        stats.add_widget(totalorderpricelabel)
-        stats.add_widget(instockitemslabel)
-        stats.add_widget(instockitemspricelabel)
-        stats.add_widget(solditemslabel)
-        stats.add_widget(soldproductspricelabel)
-        stats.add_widget(profitlabel)
-        
+                try:    
+                    vendu.append(product['vendu'])
+                except KeyError:
+                    vendu.append('')
+
+                commande.append(product['commande'])
+
+                try:    
+                    fournisseur.append(product['fournisseur'])
+                except KeyError:
+                    fournisseur.append('')
+
+                try:    
+                    dernier_achat.append(product['dernier_achat'])
+                except KeyError:
+                    dernier_achat.append('')
+
+                try:    
+                    commentaire.append(product['commentaire'])
+                except KeyError:
+                    commentaire.append('****')
+
+            sum_purchase_price = []
+            sum_sold_list = []
+            sold_items = []
+            in_stock_items = []
+            in_stock_items_price = []
+
+            for c, v in enumerate(Ref):
+                _stocks['Ref'][c] = Ref[c]
+                _stocks['marque'][c] = marque[c]
+                _stocks['modele'][c] = modele[c]
+                _stocks['cpu'][c] = cpu[c]
+                _stocks['ram'][c] = ram[c]
+                _stocks['stockage'][c] = stockage[c]
+                _stocks['gpu'][c] = gpu[c]
+                _stocks['batterie'][c] = batterie[c]
+                _stocks['prix'][c] = prix[c]
+                _stocks['prix_achat'][c] = prix_achat[c]
+                _stocks['en_stock'][c] = en_stock[c]
+                _stocks['vendu'][c] = vendu[c]
+                _stocks['commande'][c] = commande[c]
+                _stocks['dernier_achat'][c] = dernier_achat[c]
+                _stocks['commentaire'][c] = commentaire[c]
+                _stocks['fournisseur'][c] = fournisseur[c]
+            
+                if vendu[c] == '':
+                    vendu[c] = 0
+
+                if en_stock[c] == '':
+                    en_stock[c] = 0
+        else:
+            stats = self.ids.scrn_product_stats
+            stats.clear_widgets()
+            _stocks = {}
+            _stocks['Ref'] = {}
+            _stocks['designation'] = {}
+            _stocks['prix'] = {}
+            _stocks['prix_achat'] = {}
+            _stocks['en_stock'] = {}
+            _stocks['vendu'] = {}
+            _stocks['commande'] = {}
+            _stocks['fournisseur'] = {}
+            _stocks['dernier_achat'] = {}
+            _stocks['commentaire'] = {}
+
+            Ref = []
+            prix = []
+            prix_achat = []
+            marque = []
+            modele = []
+            cpu = []
+            ram = []
+            gpu = []
+            stockage = []
+            batterie = []
+            en_stock = []
+            vendu = []
+            commande = []
+            fournisseur = []
+            dernier_achat = []
+            commentaire = []
+
+            for product in products.find():
+                Ref.append(product['Ref'])
+                prix.append(product['prix'])
+                try:
+                    prix_achat.append(product['prix_achat'])
+                except KeyError:
+                    prix_achat.append('')
+                marque.append(product['marque'])
+                modele.append(product['modele'])
+                cpu.append(product['cpu'])
+                ram.append(product['ram'])
+                gpu.append(product['gpu'])
+                stockage.append(product['stockage'])
+                batterie.append(product['batterie'])
+                try:    
+                    en_stock.append(product['en_stock'])
+                except KeyError:
+                    en_stock.append('')
+
+                try:    
+                    vendu.append(product['vendu'])
+                except KeyError:
+                    vendu.append('')
+
+                commande.append(product['commande'])
+
+                try:    
+                    fournisseur.append(product['fournisseur'])
+                except KeyError:
+                    fournisseur.append('')
+
+                try:    
+                    dernier_achat.append(product['dernier_achat'])
+                except KeyError:
+                    dernier_achat.append('')
+
+                try:    
+                    commentaire.append(product['commentaire'])
+                except KeyError:
+                    commentaire.append('****')
+
+            sum_purchase_price = []
+            sum_sold_list = []
+            sold_items = []
+            in_stock_items = []
+            in_stock_items_price = []
+
+            for c, v in enumerate(Ref):
+                _stocks['Ref'][c] = Ref[c]
+                _stocks['designation'][c] = f"{marque[c]} {modele[c]} | {cpu[c]} | {ram[c]}GB\n{stockage[c]} | {gpu[c]} | {batterie[c]}"
+                _stocks['prix'][c] = prix[c]
+                _stocks['prix_achat'][c] = prix_achat[c]
+                _stocks['en_stock'][c] = en_stock[c]
+                _stocks['vendu'][c] = vendu[c]
+                _stocks['commande'][c] = commande[c]
+                _stocks['dernier_achat'][c] = dernier_achat[c]
+                _stocks['commentaire'][c] = commentaire[c]
+                _stocks['fournisseur'][c] = fournisseur[c]
+            
+                if vendu[c] == '':
+                    vendu[c] = 0
+
+                if en_stock[c] == '':
+                    en_stock[c] = 0
+
+                if int(vendu[c]) >= 1:
+                    sum_sold_list.append(int(vendu[c])*float(prix[c]))
+                    sold_items.append(int(vendu[c]))
+                    sum_purchase_price.append(int(vendu[c])*float(prix_achat[c]))
+
+                if int(en_stock[c]) >= 1:
+                    in_stock_items_price.append(int(en_stock[c])*float(prix_achat[c]))
+                    in_stock_items.append(int(en_stock[c]))
+                    sum_purchase_price.append(int(en_stock[c])*float(prix_achat[c]))
+
+            # key numbers
+            total_order_price = sum(sum_purchase_price)
+            in_stock_items = sum(in_stock_items)
+            in_stock_items_price = sum(in_stock_items_price)
+            sold_items = sum(sold_items)
+            sold_products_price = float(sum(sum_sold_list))
+            profit = sold_products_price-total_order_price
+
+            totalorderpricelabel = Label(text=f'Prix Totale:\n{total_order_price} DH', bold=True, color=(0,0,0,1))
+            instockitemslabel = Label(text=f'Produits en stock:\n{in_stock_items}', bold=True, color=(0,0,0,1))
+            instockitemspricelabel = Label(text=f'Prix des produits en stock:\n{in_stock_items_price} DH', bold=True, color=(0,0,0,1))
+            solditemslabel = Label(text=f'Produits Vendu:\n{sold_items}', bold=True, color=(0,0,0,1))
+            soldproductspricelabel = Label(text=f'Prix des produits Vendu:\n{sold_products_price} DH', bold=True, color=(0,0,0,1))
+            profitlabel = Label(text=f'Profit:\n{profit} DH', bold=True, color=(0,0,0,1))
+
+            stats.add_widget(totalorderpricelabel)
+            stats.add_widget(instockitemslabel)
+            stats.add_widget(instockitemspricelabel)
+            stats.add_widget(solditemslabel)
+            stats.add_widget(soldproductspricelabel)
+            stats.add_widget(profitlabel)
+   
         return _stocks
     
     
