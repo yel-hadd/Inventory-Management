@@ -95,9 +95,6 @@
                 FlatButton:
                     text: 'TVA'
                     size_hint_x: .1
-                FlatButton:
-                    text: 'Totale'
-                    size_hint_x: .2
 
             BoxLayout:
                 id: product_inputs
@@ -108,32 +105,33 @@
                     id: code_inp
                     size_hint_x: .3
                     multiline: False
-                    on_text_validate: root.update_purchases()
+                    on_text_validate: qty_inp.focus = True
                 TextInput:
                     id: qty_inp
                     size_hint_x: .1
                     multiline: False
+                    on_text_validate: price_inp.focus = True
                 TextInput:
                     id: price_inp
                     size_hint_x: .1
                     multiline: False
+                    on_text_validate: disc_inp.focus = True
                 TextInput:
                     id: disc_inp
                     size_hint_x: .1
                     multiline: False
+                    on_text_validate: disc_perc_inp.focus = True
                 TextInput:
                     id: disc_perc_inp
                     size_hint_x: .1
                     multiline: False
+                    on_text_validate: vat_inp.focus = True
                 TextInput:
                     id: vat_inp
                     size_hint_x: .1
                     multiline: False
-                
-                TextInput:
-                    id: total_inp
-                    size_hint_x: .2
-                    multiline: False
+                    on_text_validate: root.add_to_cart()
+
             BoxLayout:
                 id: add_to_cart
                 orientation: 'vertical'
@@ -163,7 +161,10 @@
                         text: 'Réd'
                         size_hint_x: .1
                     Label:
-                        text: 'Totale'
+                        text: 'TVA'
+                        size_hint_x: .1
+                    Label:
+                        text: 'Montant'
                         size_hint_x: .2
                 ScrollView:
                     GridLayout:
@@ -172,19 +173,16 @@
                         spacing: 15
                         size_hint_y: None
                         height: self.minimum_height
-
-                    
-                    
-
         BoxLayout:
             id: preview
             orientation: 'vertical'
             size_hint_x: .3
+            padding: (10,0,0,0)
 
             TextInput:
                 id: receipt_preview
                 readonly: True
-                text: "Bienvenue Chez\nMr. Abdelatif Store !\n\nReçu N°: ********\nDate: 24-10-2022\n\n315 Rue Anywhere\n80000 AlWifaq, Agadir\n0619666722\nyassine.e@aol.com\n\n"
+                text: "Bienvenue Chez\nPronto IT !\n\nReçu N°: ********\nDate: 24-10-2022\n\n315 Rue Anywhere\n80000 AlWifaq, Agadir\n0619666722\nyassine.e@aol.com\n\n"
 
             BoxLayout:
                 orientation: "horizontal"
@@ -194,7 +192,11 @@
                 padding: (0, 5)
 
                 Button:
-                    text: "Imprimer le Reçu"
+                    text: "Facture"
+                    background_color: (.06, .45, .45, 1)
+                    background_normal: ''
+                Button:
+                    text: "Reçu"
                     background_color: (.06, .45, .45, 1)
                     background_normal: ''
                 Button:

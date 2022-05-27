@@ -23,10 +23,7 @@ import qrcode
 import os
 
 
-
 # TIDY UP CODE BY SCREEN
-
-
 class AdminWindow(BoxLayout):
     # Add screen size to get_products
     def __init__(self, **kwargs):
@@ -35,6 +32,7 @@ class AdminWindow(BoxLayout):
         db = client.pos
         self.users = db.users
         self.products = db.stocks
+        self.charges = db.charges
         
         # display users
         content = self.ids.scrn_contents
@@ -65,6 +63,12 @@ class AdminWindow(BoxLayout):
         products = self.get_products()
         prod_table  = DataTable(table=products)
         supplier_scrn.add_widget(prod_table)
+        
+        # scrn_supplier_contents
+        charges_scrn = self.ids.scrn_charges_contents
+        products = self.get_charges()
+        prod_table  = DataTable(table=products)
+        charges_scrn.add_widget(prod_table)
         
  
     def calculate_price(self):
@@ -141,7 +145,7 @@ class AdminWindow(BoxLayout):
 
         draw = ImageDraw.Draw(img)
 
-        draw.text((185, 547),f"{ref} | {prix} DH",(0,0,0),font=font2)
+        draw.text((185, 547),f"{ref}",(0,0,0),font=font2)
 
         draw.text((397, 1150),f"{marque} {modele}",(0,0,0),font=font)
         draw.text((397, 1224),f"{cpu}",(0,0,0),font=font)
@@ -213,7 +217,7 @@ class AdminWindow(BoxLayout):
             commande = product['commande']
 
             draw = ImageDraw.Draw(img)
-            draw.text((185, 547),f"{ref} | {prix} DH",(0,0,0),font=font2)
+            draw.text((185, 547),f"{ref}",(0,0,0),font=font2)
             draw.text((397, 1150),f"{marque} {modele}",(0,0,0),font=font)
             draw.text((397, 1224),f"{cpu}",(0,0,0),font=font)
             draw.text((397, 1298),f"{ram}",(0,0,0),font=font)
@@ -930,6 +934,22 @@ class AdminWindow(BoxLayout):
         
         return ref
     
+    
+    def gen_charge_ref(self):
+        numbers = digits
+        letters = ascii_uppercase
+
+        g = True
+
+        while g == True:
+            one = ''.join(choice(numbers) for i in range(5))
+            two = ''.join(choice(letters) for i in range(1))
+            ref = f"CH-{one}{two}"
+            g = self.charge_exist(ref)
+        
+        return ref
+    
+    
 
     def export_order_xlsx(self, enstock=False):
         orderref = self.ids.order_id.text
@@ -1052,8 +1072,6 @@ class AdminWindow(BoxLayout):
             self.success_popup('Tous les produits ont été exportés')
         
         return 0
-
-
 
 
     def export_xlsx(self, enstock=False):
@@ -1771,6 +1789,96 @@ class AdminWindow(BoxLayout):
         target.add_widget(crud_submit)
         target.add_widget(crud_close)
         return 0
+
+
+    def add_charge_fields(self):
+        target = self.ids.charges_ops_fields
+        target.clear_widgets()
+        motif = TextInput(hint_text='Motif', size_hint_x=3/2, multiline=False)
+        montant = TextInput(hint_text='Montant', multiline=False)
+        date = TextInput(hint_text="Date", multiline=False)
+        date.text = str(datetime.now().strftime('%d-%m-%Y'))
+        crud_submit =  Button(text='Ajouter', size_hint_x=None, width=100,
+                            background_color=(0.184, 0.216, 0.231), background_normal='',
+                            on_release=lambda x: self.add_charge(self.gen_charge_ref(), motif.text, montant.text, date.text))
+        crud_close =  Button(text='Fermer', size_hint_x=None, width=100, background_color=(0.184, 0.216, 0.231), background_normal='',
+                            on_release=lambda x: self.ids.charges_ops_fields.clear_widgets())
+        target.add_widget(motif)
+        target.add_widget(montant)
+        target.add_widget(date)
+        target.add_widget(crud_submit)
+        target.add_widget(crud_close)
+        
+        return 0
+
+
+    def charge_exist(self, ref):
+        i = 0
+        product = self.charges.find({'Ref': f'{ref}'})
+        try:
+            product = product[0]
+            return True 
+        except IndexError:
+            return False 
+
+
+    def get_charges(self):
+        charges = self.charges
+        
+        _charges = {}
+        _charges['Ref'] = {}
+        _charges['montant'] = {}
+        _charges['motif'] = {}
+        _charges['date'] = {}        
+        
+        ref = []
+        motifs = []
+        montants = []
+        dates = []
+
+        for user in charges.find():
+            ref.append(user['Ref'])
+            motifs.append(user['motif'])
+            montants.append(user['montant'])
+            dates.append(user['date'])
+
+        for c, v in enumerate(ref):
+            _charges['Ref'][c] = ref[c]
+            _charges['motif'][c] = motifs[c]
+            _charges['montant'][c] = montants[c]
+            _charges['date'][c] = dates[c]
+        
+        return _charges
+    
+    
+    def add_charge(self, ref, motif, montant, date):
+        if ref == '':
+            return 0
+
+        if motif == '':
+            self.missing_field_popup(field='Motif Manquant')
+            return 0
+        if montant == '':
+            self.missing_field_popup(field='Modèle')
+            return 0
+        if date == '':
+            self.missing_field_popup(field='CPU')
+            return 0
+        
+        charge_scrn = self.ids.scrn_charges_contents
+        charge_scrn.clear_widgets()
+        
+        self.charges.insert_one({'Ref':ref, 'motif': motif, 'montant':montant, 'date': date})
+        
+        charges = self.get_charges()
+
+        
+        charges_table  = DataTable(table=charges)
+        charge_scrn.add_widget(charges_table)
+        
+        self.success_popup("Carge Ajouté")
+        
+        return 0
     
     
     def add_user(self, first, last, user,  pwd, des):
@@ -1884,8 +1992,8 @@ class AdminWindow(BoxLayout):
             self.ids.scrn_mngr.current = 'scrn_order_content'
         elif instance.text == 'Calculateur':
             self.ids.scrn_mngr.current = 'scrn_calc_content'
-        elif instance.text == 'Statistiques':
-            self.ids.scrn_mngr.current = 'scrn_analysis_content' 
+        elif instance.text == 'Charges':
+            self.ids.scrn_mngr.current = 'scrn_charges_content' 
         elif instance.text == 'Recherche':
             self.ids.scrn_mngr.current = 'scrn_search_content'
         elif instance.text == 'Fournisseurs':

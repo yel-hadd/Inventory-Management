@@ -102,7 +102,7 @@
                 group: 'admin_navs'
             ToggleButton:
                 id: products_toggle
-                text: "Transactions"
+                text: "Charges"
                 size_hint_y:.1
                 background_color: (.06, 0.45, .35, 1)
                 background_normal: ''
@@ -274,18 +274,6 @@
                                 on_release: root.create_order_labels(order_id.text)
                                 background_color: (.06, .45, .45, 1)
                                 background_normal: ''
-                            
-
-
-
-
-                
-                
-                
-                
-                
-                
-                
                 Screen:
                     id: content
                     name:  'scrn_supplier_content'
@@ -454,3 +442,46 @@
                                 on_release: root.create_label(prod_id.text)
                                 background_color: (.06, .45, .45, 1)
                                 background_normal: ''
+                Screen:
+                    id: scrn_charges_content
+                    name:  'scrn_charges_content'
+                    BoxLayout:
+                        orientation:  "vertical"
+                        spacing: 10
+                        BoxLayout:
+                            id: scrn_charges_contents
+                        BoxLayout:
+                            id: charges_ops_fields
+                            spacing: 10
+                            size_hint_y: None
+                            height: 35
+                        BoxLayout:
+                            id: charges_ops_btns
+                            spacing: 10
+                            size_hint_y: None
+                            height: 45
+                            Button:
+                                id: charges_crud_add
+                                text: "Ajouter Charge"
+                                on_release: root.add_charge_fields()
+                                background_color: (.06, .45, .45, 1)
+                                background_normal: ''
+                            Button:
+                                id: charges_crud_update
+                                text:  'Modifier Charge'
+                                on_release: root.update_charge_fields()
+                                background_color: (.06, .45, .45, 1)
+                                background_normal: ''
+                            Button:
+                                id: charges_crud_remove
+                                text:  'Supprimer Charge'
+                                on_release: root.remove_user_fields()
+                                background_color: (.06, .45, .45, 1)
+                                background_normal: ''
+                            Button:
+                                id: charges_crud_remove
+                                text:  'Exporter Charges'
+                                on_release: root.remove_user_fields()
+                                background_color: (.06, .45, .45, 1)
+                                background_normal: ''
+                
