@@ -42,13 +42,13 @@
                 size: self.size
                 pos: self.pos
         Button:
-            text: 'Current Item:'
+            text: 'Article actuel'
             background_normal: ''
             background_color: (.06, .32, .32, 1)
             size_hint_x: .4
         Button:
             id: cur_product
-            text: 'Default Product'
+            text: 'Désignation'
             background_normal: ''
             background_color: (.06, .4, .4, 1)
         Button: 
@@ -203,6 +203,7 @@
                     text: "Effacer"
                     background_color: (.06, .45, .45, 1)
                     background_normal: ''
+                    on_release: root.clear()
 
 
     BoxLayout:

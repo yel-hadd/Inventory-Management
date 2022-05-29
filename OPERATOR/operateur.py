@@ -6,6 +6,8 @@ from kivy.uix.image import Image
 import re
 from pymongo import MongoClient
 from kivy.uix.modalview import ModalView
+from collections import OrderedDict
+import itertools
 
 class OperateurWindow(BoxLayout):
     def __init__(self, **kwargs):
@@ -142,6 +144,15 @@ class OperateurWindow(BoxLayout):
             if self.cartsummary[ref] + add <= qty:
                 for i in range(0, add):
                     self.cart.append(self.stockindex[indice])
+                    prdct.append(self.stockindex[indice])
+                    prdct.append(self.stock[indice][0])
+                    prdct.append(add)
+                    prdct.append(discount)
+                    prdct.append(tva)
+                    prdct.append(price)
+                    prdct.append(total)
+                    self.purchases.append(prdct)
+                    prdct = []
             else:
                 self.error_popup("stock insuffisant")
                 self.ids.qty_inp.focus = True
@@ -157,7 +168,6 @@ class OperateurWindow(BoxLayout):
                     prdct.append(tva)
                     prdct.append(price)
                     prdct.append(total)
-                    self.update_purchases(prdct[0], prdct[1], prdct[2], prdct[3], prdct[4], prdct[5], prdct[6])
                     self.purchases.append(prdct)
                     prdct = []
                     #self.detailedsummary[f"{ref}"] = self.stock[indice]
@@ -166,6 +176,15 @@ class OperateurWindow(BoxLayout):
                 self.ids.qty_inp.focus = True
                 return 0
         
+        self.purchases = list(k for k,_ in itertools.groupby(self.purchases))
+
+        
+        for c, element in enumerate(self.purchases):
+            if c == 0:
+                self.update_purchases(element[0], element[1], element[2], element[3], element[4], element[5], element[6], clear=True)
+            else:
+                self.update_purchases(element[0], element[1], element[2], element[3], element[4], element[5], element[6], clear=False)
+        
         self.cartsummary = dict((item, self.cart.count(item)) for item in self.cart)
         self.update_reciept()
         
@@ -173,13 +192,16 @@ class OperateurWindow(BoxLayout):
         print(total)
         self.ids.code_inp.text = ''
         self.ids.code_inp.focus = True
-        
+        print("done")
         return 0
         
         
-    def update_purchases(self, ref, designation, quantity, discount, vat, price, totall):
+    def update_purchases(self, ref, designation, quantity, discount, vat, price, totall, clear=False):
         pcode = ref
         product_container = self.ids.products
+        
+        if clear ==  True:
+            product_container.clear_widgets()
 
         details = BoxLayout(size_hint_y=None, height=30, pos_hint={'top': 1})
         product_container.add_widget(details)
@@ -221,21 +243,49 @@ class OperateurWindow(BoxLayout):
         for c, item in enumerate(self.purchases):
             new = new + f"\n({c+1})\t" + str(item[1]).lower()+ "\n"
             new = f"{new}\n{str(item[0])}\t{str(item[5])}\tx\t{str(item[2])}\n"
-        
+
         new = new + "\n" + "\n" + F"Totale: {self.total}"
-        
+
         preview.text = new
-        
+
         self.ids.code_inp.text = ''
         self.ids.qty_inp.text = ''
         self.ids.price_inp.text = ''
         self.ids.disc_inp.text = ''
         self.ids.disc_perc_inp.text = ''
         self.ids.vat_inp.text = ''
+        self.ids.code_inp.focus = True
+
+        return 0
+
+ 
+    def clear(self):
+        preview = self.ids.receipt_preview
+        preview.text = self.previewheader
+        self.ids.products.clear_widgets()
+        self.cart = []
+        self.cartsummary = {}
+        self.detailedsummary = {}
+        self.qty = []
+        self.total = 0.00
+        self.mastertotal = []
+        self.stock = []
+        self.stockindex = []
+        self.purchases = []
+        
+        self.get_stocks()
+        
+        self.ids.cur_product.text = 'Désignation'
+        self.ids.cur_price.text = '0.00'
+        self.ids.code_inp.text = ''
+        self.ids.qty_inp.text = ''
+        self.ids.price_inp.text = ''
+        self.ids.disc_inp.text = ''
+        self.ids.disc_perc_inp.text = ''
+        self.ids.vat_inp.text = ''
+        self.ids.code_inp.focus = True
         
         return 0
-        
-        
         
 class OperateurApp(App):
     def build(self):

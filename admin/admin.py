@@ -7,6 +7,7 @@ from kivy.uix.button import Button
 from kivy.uix.spinner import Spinner
 from kivy.uix.modalview import ModalView
 from kivy.uix.boxlayout import BoxLayout
+from numpy import product
 from pymongo import MongoClient
 from utils.datatable import DataTable
 from datetime import datetime
@@ -756,10 +757,117 @@ class AdminWindow(BoxLayout):
         return _stocks
 
 
-    def get_product(self):
-        orderref = self.ids.prod_id.text
+    def get_product(self, order='False'):
+        if order == 'False':
+            orderref = self.ids.prod_id.text
+        else:
+            orderref = order
+        
         if orderref == '':
             return 0
+        
+        if order != 'False':
+            _stocks = {}
+            _stocks['Ref'] = {}
+            _stocks['marque'] = {}
+            _stocks['modele'] = {}
+            _stocks['cpu'] = {}
+            _stocks['ram'] = {}
+            _stocks['stockage'] = {}
+            _stocks['gpu'] = {}
+            _stocks['batterie'] = {}
+            _stocks['prix'] = {}
+            _stocks['prix_achat'] = {}
+            _stocks['en_stock'] = {}
+            _stocks['vendu'] = {}
+            _stocks['commande'] = {}
+            _stocks['fournisseur'] = {}
+            _stocks['dernier_achat'] = {}
+            _stocks['commentaire'] = {}
+
+            Ref = []
+            prix = []
+            prix_achat = []
+            marque = []
+            modele = []
+            cpu = []
+            ram = []
+            gpu = []
+            stockage = []
+            batterie = []
+            en_stock = []
+            vendu = []
+            commande = []
+            fournisseur = []
+            dernier_achat = []
+            commentaire = []
+
+            for product in self.products.find({"Ref": f"{orderref}"}):
+                Ref.append(product['Ref'])
+                prix.append(product['prix'])
+                try:
+                    prix_achat.append(product['prix_achat'])
+                except KeyError:
+                    prix_achat.append('')
+                marque.append(product['marque'])
+                modele.append(product['modele'])
+                cpu.append(product['cpu'])
+                ram.append(product['ram'])
+                gpu.append(product['gpu'])
+                stockage.append(product['stockage'])
+                batterie.append(product['batterie'])
+                try:    
+                    en_stock.append(product['en_stock'])
+                except KeyError:
+                    en_stock.append('')
+
+                try:    
+                    vendu.append(product['vendu'])
+                except KeyError:
+                    vendu.append('')
+
+                commande.append(product['commande'])
+
+                try:    
+                    fournisseur.append(product['fournisseur'])
+                except KeyError:
+                    fournisseur.append('')
+
+                try:    
+                    dernier_achat.append(product['dernier_achat'])
+                except KeyError:
+                    dernier_achat.append('')
+
+                try:    
+                    commentaire.append(product['commentaire'])
+                except KeyError:
+                    commentaire.append('****')
+
+            for c, v in enumerate(Ref):
+                _stocks['Ref'] = Ref[c]
+                _stocks['marque'] = marque[c]
+                _stocks['modele'] = modele[c]
+                _stocks['cpu'] = cpu[c]
+                _stocks['ram'] = ram[c]
+                _stocks['stockage'] = stockage[c]
+                _stocks['gpu'] = gpu[c]
+                _stocks['batterie'] = batterie[c]
+                _stocks['prix'] = prix[c]
+                _stocks['prix_achat'] = prix_achat[c]
+                _stocks['en_stock'] = en_stock[c]
+                _stocks['vendu'] = vendu[c]
+                _stocks['commande'] = commande[c]
+                _stocks['dernier_achat'] = dernier_achat[c]
+                _stocks['commentaire'] = commentaire[c]
+                _stocks['fournisseur'] = fournisseur[c]
+            
+                if vendu[c] == '':
+                    vendu[c] = 0
+
+                if en_stock[c] == '':
+                    en_stock[c] = 0
+            
+            return _stocks
         
         order_scrn = self.ids.scrn_search_contents
         order_scrn.clear_widgets()
@@ -1626,54 +1734,82 @@ class AdminWindow(BoxLayout):
         return 0
     
 
+    def u_p_autofill(self, code):
+        if code == '':
+            return 0
+        else:
+            product = self.get_product(order=code)
+            print(product)
+            if len(product['Ref']) <= 0:
+                self.error_popup("Réference Invalide")
+                return 0
+            else:
+                self.crud_marque.text = str(product['marque'])
+                self.crud_modele.text = str(product['modele'])
+                self.crud_cpu.text = str(product['cpu'])
+                self.crud_ram.text = str(product['ram'])
+                self.crud_gpu.text = str(product['gpu'])
+                self.crud_stockage.text = str(product['stockage'])
+                self.crud_batterie.text = str(product['batterie'])
+                self.crud_price.text = str(product['prix'])
+                self.crud_buy_price.text = str(product['prix_achat'])
+                self.crud_stock.text = str(product['en_stock'])
+                self.crud_sold.text = str(product['vendu'])
+                self.crud_order.text = str(product['commande'])
+                self.crud_fournisseur.text = str(product['fournisseur'])
+                self.crud_comment.text = str(product['commentaire'])
+                return 0
+
+
     def update_product_fields(self):
         target = self.ids.ops_fields_p
         target.clear_widgets()
         
         crud_code = TextInput(hint_text='Réf', multiline=False)
-        crud_marque = TextInput(hint_text='Marque', multiline=False)
-        crud_modele = TextInput(hint_text='Modèle', multiline=False)
-        crud_cpu = TextInput(hint_text='CPU', multiline=False)
-        crud_ram = TextInput(hint_text='RAM', multiline=False)
-        crud_gpu = TextInput(hint_text='GPU', multiline=False)
-        crud_stockage = TextInput(hint_text='stockage', multiline=False)
-        crud_batterie = TextInput(hint_text='Batterie', multiline=False)
-        crud_price = TextInput(hint_text='Prix', multiline=False)
-        crud_buy_price = TextInput(hint_text="Prix d'achat", multiline=False)
-        crud_exchange_rate = TextInput(hint_text="Taux de change", multiline=False)
-        crud_stock = TextInput(hint_text='En stock', multiline=False)
-        crud_sold = TextInput(hint_text='Vendu', multiline=False)
-        crud_order = TextInput(hint_text='Commande', multiline=False)
-        crud_fournisseur = TextInput(hint_text='Fournisseur', multiline=False)
-        crud_last_purchase = TextInput(hint_text='Dernier Achat', multiline=False)
-        crud_comment = TextInput(hint_text='Commentaire', multiline=False)
+        self.crud_marque = TextInput(hint_text='Marque', multiline=False)
+        self.crud_modele = TextInput(hint_text='Modèle', multiline=False)
+        self.crud_cpu = TextInput(hint_text='CPU', multiline=False)
+        self.crud_ram = TextInput(hint_text='RAM', multiline=False)
+        self.crud_gpu = TextInput(hint_text='GPU', multiline=False)
+        self.crud_stockage = TextInput(hint_text='stockage', multiline=False)
+        self.crud_batterie = TextInput(hint_text='Batterie', multiline=False)
+        self.crud_price = TextInput(hint_text='Prix', multiline=False)
+        self.crud_buy_price = TextInput(hint_text="Prix d'achat", multiline=False)
+        self.crud_exchange_rate = TextInput(hint_text="Taux de change", multiline=False)
+        self.crud_stock = TextInput(hint_text='En stock', multiline=False)
+        self.crud_sold = TextInput(hint_text='Vendu', multiline=False)
+        self.crud_order = TextInput(hint_text='Commande', multiline=False)
+        self.crud_fournisseur = TextInput(hint_text='Fournisseur', multiline=False)
+        self.crud_comment = TextInput(hint_text='Commentaire', multiline=False)
+        crud_search =  Button(text='Recherche', on_release=lambda x:self.u_p_autofill(crud_code.text),
+                              background_color=(0.184, 0.216, 0.231), background_normal='')
         crud_submit_p =  Button(text='Modifier Produit', size_hint_x=1/8, width=100,
-                                on_release=lambda x:self.update_product(crud_code.text, crud_marque.text, crud_modele.text, crud_cpu.text,
-                                                                        crud_ram.text, crud_gpu.text, crud_stockage.text, crud_batterie.text,
-                                                                        crud_price.text, crud_buy_price.text, crud_exchange_rate.text, crud_stock.text, crud_sold.text,
-                                                                        crud_order.text, crud_fournisseur.text, crud_last_purchase.text, crud_comment.text), 
+                                on_release=lambda x:self.update_product(crud_code.text, self.crud_marque.text, self.crud_modele.text, self.crud_cpu.text,
+                                                                        self.crud_ram.text, self.crud_gpu.text, self.crud_stockage.text, self.crud_batterie.text,
+                                                                        self.crud_price.text, self.crud_buy_price.text, self.crud_exchange_rate.text, self.crud_stock.text, self.crud_sold.text,
+                                                                        self.crud_order.text, self.crud_fournisseur.text, self.crud_last_purchase.text, self.crud_comment.text), 
                                 background_color=(0.184, 0.216, 0.231), background_normal='')
             
         crud_close_p =  Button(text='Fermer', size_hint_x=1/8, width=100, on_release=lambda x: self.ids.ops_fields_p.clear_widgets(),
                             background_color=(0.184, 0.216, 0.231), background_normal='')
         
         target.add_widget(crud_code)
-        target.add_widget(crud_marque)
-        target.add_widget(crud_modele)
-        target.add_widget(crud_cpu)
-        target.add_widget(crud_ram)
-        target.add_widget(crud_gpu)
-        target.add_widget(crud_stockage)
-        target.add_widget(crud_batterie)
-        target.add_widget(crud_price)
-        target.add_widget(crud_buy_price)
-        target.add_widget(crud_exchange_rate)
-        target.add_widget(crud_stock)
-        target.add_widget(crud_sold)
-        target.add_widget(crud_order)
-        target.add_widget(crud_fournisseur)
-        target.add_widget(crud_last_purchase)
-        target.add_widget(crud_comment)
+        target.add_widget(crud_search)
+        target.add_widget(self.crud_marque)
+        target.add_widget(self.crud_modele)
+        target.add_widget(self.crud_cpu)
+        target.add_widget(self.crud_ram)
+        target.add_widget(self.crud_gpu)
+        target.add_widget(self.crud_stockage)
+        target.add_widget(self.crud_batterie)
+        target.add_widget(self.crud_price)
+        target.add_widget(self.crud_buy_price)
+        target.add_widget(self.crud_exchange_rate)
+        target.add_widget(self.crud_stock)
+        target.add_widget(self.crud_sold)
+        target.add_widget(self.crud_order)
+        target.add_widget(self.crud_fournisseur)
+        target.add_widget(self.crud_comment)
         target.add_widget(crud_submit_p)
         return 0
 
@@ -1812,6 +1948,30 @@ class AdminWindow(BoxLayout):
         return 0
 
 
+    def update_charge_fields(self):
+        target = self.ids.charges_ops_fields
+        target.clear_widgets()
+        ref = TextInput(hint_text='Référence', size_hint_x=3/2, multiline=False)
+        motif = TextInput(hint_text='Motif', size_hint_x=3/2, multiline=False)
+        montant = TextInput(hint_text='Montant', multiline=False)
+        date = TextInput(hint_text="Date", multiline=False)
+        crud_submit =  Button(text='Modifier', size_hint_x=None, width=100,
+                            background_color=(0.184, 0.216, 0.231), background_normal='',
+                            on_release=lambda x: self.update_charge(ref.text, motif.text, montant.text, date.text))
+        crud_close =  Button(text='Fermer', size_hint_x=None, width=100, background_color=(0.184, 0.216, 0.231), background_normal='',
+                            on_release=lambda x: self.ids.charges_ops_fields.clear_widgets())
+        target.add_widget(ref)
+        target.add_widget(motif)
+        target.add_widget(montant)
+        target.add_widget(date)
+        target.add_widget(crud_submit)
+        target.add_widget(crud_close)
+        
+        return 0
+
+
+
+
     def charge_exist(self, ref):
         i = 0
         product = self.charges.find({'Ref': f'{ref}'})
@@ -1856,7 +2016,7 @@ class AdminWindow(BoxLayout):
             return 0
 
         if motif == '':
-            self.missing_field_popup(field='Motif Manquant')
+            self.missing_field_popup(field='Motif')
             return 0
         if montant == '':
             self.missing_field_popup(field='Modèle')
