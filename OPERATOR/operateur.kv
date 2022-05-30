@@ -182,8 +182,8 @@
             TextInput:
                 id: receipt_preview
                 readonly: True
-                text: "Bienvenue Chez\nPronto IT !\n\nReçu N°: ********\nDate: 24-10-2022\n\n315 Rue Anywhere\n80000 AlWifaq, Agadir\n0619666722\nyassine.e@aol.com\n\n"
-
+                text: "Bienvenue Chez\nPronto IT !\n\n315 Rue Anywhere\n80000 AlWifaq, Agadir\n0619666722\nadmin@pronto-it.com\n\n"
+                #Reçu N°: ********\nDate: 24-10-2022\n\n
             BoxLayout:
                 orientation: "horizontal"
                 size_hint_y: None
@@ -192,13 +192,10 @@
                 padding: (0, 5)
 
                 Button:
-                    text: "Facture"
+                    text: "Enregistrer"
                     background_color: (.06, .45, .45, 1)
                     background_normal: ''
-                Button:
-                    text: "Reçu"
-                    background_color: (.06, .45, .45, 1)
-                    background_normal: ''
+                    on_release: root.validate_transaction()
                 Button:
                     text: "Effacer"
                     background_color: (.06, .45, .45, 1)

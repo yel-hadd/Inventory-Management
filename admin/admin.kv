@@ -38,7 +38,6 @@
                         text: "quitter"
                         size_hint_y: None
                         height: 30
-
         Label:
             text: 'PRONTO IT | Portail Administrateur'
             bold: True
@@ -475,13 +474,13 @@
                             Button:
                                 id: charges_crud_remove
                                 text:  'Supprimer Charge'
-                                on_release: root.remove_user_fields()
+                                on_release: root.remove_charge_fields()
                                 background_color: (.06, .45, .45, 1)
                                 background_normal: ''
                             Button:
                                 id: charges_crud_remove
                                 text:  'Exporter Charges'
-                                on_release: root.remove_user_fields()
+                                on_release: root.export_charge_xlsx()
                                 background_color: (.06, .45, .45, 1)
                                 background_normal: ''
                 

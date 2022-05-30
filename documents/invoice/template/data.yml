@@ -1,0 +1,27 @@
+from:
+    name: ecm.online GmbH
+    street: Bilker Allee 217
+    postcode: 40215
+    city: Düsseldorf
+
+to:
+    name: Musterkunde
+    street: An der Ecke 1
+    postcode: 12345
+    city: Berlin
+
+customer_number: 10004
+currency: €
+tax_rate: 19
+invoice:
+    number: R10006
+    date: 15.09.2016
+    pay_until_date: 22.09.2016
+
+positions:- amount: 1
+  netto_price: 5000.0
+  ref: HP-4595X
+  tax_rate: 0
+  text: 'HP GGGTEST | i7 GTEST | 8
+
+    1To HDD | NVIDEA | Bien'

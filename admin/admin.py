@@ -7,10 +7,8 @@ from kivy.uix.button import Button
 from kivy.uix.spinner import Spinner
 from kivy.uix.modalview import ModalView
 from kivy.uix.boxlayout import BoxLayout
-from numpy import product
 from pymongo import MongoClient
 from utils.datatable import DataTable
-from datetime import datetime
 import hashlib
 import openpyxl
 import tkinter.filedialog
@@ -1056,8 +1054,7 @@ class AdminWindow(BoxLayout):
             g = self.charge_exist(ref)
         
         return ref
-    
-    
+   
 
     def export_order_xlsx(self, enstock=False):
         orderref = self.ids.order_id.text
@@ -1232,6 +1229,49 @@ class AdminWindow(BoxLayout):
             self.success_popup('Tous les produits ont été exportés')
         
         return 0
+
+
+    def export_charge_xlsx(self):
+        path = tkinter.filedialog.askdirectory()
+        if path == '':
+            return 0
+        
+        _stocks = self.get_charges()
+        
+        titles = _stocks.keys()
+        titles = list(titles)
+
+        titles2 = ['Ref', 'Montant', 'Motif', 'Date']
+
+        product = []
+        all_products = []
+
+        for c, v in enumerate(_stocks['Ref']):
+            for count, value in enumerate(titles):
+                product.append(_stocks[titles[count]][c])
+            all_products.append(product)
+            product = []
+            
+        
+        filename = '/charges-'
+
+        all_products.insert(0, titles2)
+
+        wb = openpyxl.Workbook()
+        ws_write = wb.worksheets[0]
+
+        for p in all_products:
+            ws_write.append(p)
+
+        today = datetime.today().strftime("%d-%m-%Y")
+        wb.save(filename=f'{path}{filename}{today}.xlsx')
+        
+        self.success_popup('Tous les charges ont été exportés')
+        
+        return 0
+
+
+
 
 
     def import_xlsx(self):
@@ -1811,6 +1851,7 @@ class AdminWindow(BoxLayout):
         target.add_widget(self.crud_fournisseur)
         target.add_widget(self.crud_comment)
         target.add_widget(crud_submit_p)
+        crud_code.focus = True
         return 0
 
   
@@ -1945,6 +1986,8 @@ class AdminWindow(BoxLayout):
         target.add_widget(crud_submit)
         target.add_widget(crud_close)
         
+        motif.focus = True
+        
         return 0
 
 
@@ -1966,10 +2009,61 @@ class AdminWindow(BoxLayout):
         target.add_widget(date)
         target.add_widget(crud_submit)
         target.add_widget(crud_close)
-        
+        ref.focus = True
         return 0
 
 
+    def remove_charge_fields(self):
+        target = self.ids.charges_ops_fields
+        target.clear_widgets()
+        crud_user = TextInput(hint_text="Référence", multiline=False)
+        crud_submit =  Button(text='Supprimer', size_hint_x=None, width=100, background_color=(0.184, 0.216, 0.231), background_normal='',
+                            on_release=lambda x: self.remove_charge(crud_user.text))
+        crud_close =  Button(text='Fermer', size_hint_x=None, width=100, background_color=(0.184, 0.216, 0.231), background_normal='',
+                            on_release=lambda x: self.ids.charges_ops_fields.clear_widgets())
+        target.add_widget(crud_user)
+        target.add_widget(crud_submit)
+        target.add_widget(crud_close)
+        
+        crud_user.focus = True
+        return 0
+    
+
+    def remove_charge(self, ref):
+        if ref == '':
+            self.missing_field_popup(field="Référence")
+            return 0
+        if not self.charge_exist(ref):
+            self.error_popup("Le référence n' existe pas")
+            return 0
+        content = self.ids.scrn_charges_contents
+        content.clear_widgets()
+        self.charges.delete_many({"Ref":ref})
+        charges = self.get_charges()
+        
+        chargetable  = DataTable(table=charges)
+        content.add_widget(chargetable)
+        
+        self.success_popup(f"La charge {ref} a été Supprimé")
+        return 0
+
+
+    def update_charge(self, ref, motif, montant, date):
+        if ref == '':
+            self.missing_field_popup(field="Nom d'utilisateur")
+            return 0
+        if not self.charge_exist(ref):
+            self.error_popup("Réference Erroné")
+            return 0
+        content = self.ids.scrn_charges_contents
+        content.clear_widgets()
+        self.charges.update_one({'Ref':ref}, {'$set':{'motif':motif, 'montant': montant, 'date':date}})
+        charges = self.get_charges()
+        chargetable  = DataTable(table=charges)
+        content.add_widget(chargetable)
+
+        self.success_popup(f"La charge {ref} Modifié")
+        return 0
 
 
     def charge_exist(self, ref):
@@ -2139,7 +2233,7 @@ class AdminWindow(BoxLayout):
         usertable  = DataTable(table=users)
         content.add_widget(usertable)
         
-        self.success_popup(f"Utilisateur {username} Ajouté")
+        self.success_popup(f"Utilisateur {username} Supprimé")
         return 0
     
     

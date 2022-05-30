@@ -1,4 +1,3 @@
-from tkinter import PhotoImage
 from kivy.app import App
 from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.label import Label
@@ -8,6 +7,17 @@ from pymongo import MongoClient
 from kivy.uix.modalview import ModalView
 from collections import OrderedDict
 import itertools
+import os
+from  random import choice
+from string import digits, ascii_uppercase
+import yaml
+import shutil
+from datetime import datetime
+import sys
+from threading import Thread
+
+
+
 
 class OperateurWindow(BoxLayout):
     def __init__(self, **kwargs):
@@ -16,7 +26,9 @@ class OperateurWindow(BoxLayout):
         client = MongoClient()
         db = client.pos
         self.stocks = db.stocks
-
+        self.products = db.stocks
+        self.transactions = db.transactions
+        
         self.cart = []
         self.cartsummary = {}
         self.detailedsummary = {}
@@ -31,7 +43,50 @@ class OperateurWindow(BoxLayout):
         
         self.previewheader = self.ids.receipt_preview.text
         
+        self.transaction_id = self.gen_transaction_ref()
+        
+        
+        
+    def success_popup(self, operation):
+        box = BoxLayout(orientation='vertical', spacing=10, size_hint_y=None)        
+        error_img = Image(source='./utils/2.png', size=(150, 150))
+        error_msg = Label(text=f'{operation} avec succès', bold=True)
+        
+        
+        popup = ModalView(size_hint=(None, None), size=(400, 300))
+        box.add_widget(error_img)
+        box.add_widget(error_msg)
+        
+        popup.add_widget(box)
+        
+        popup.open()
+        
+        return 0
+        
 
+    def transaction_exist(self, ref):
+        tr = self.transactions.find({'Ref': f'{ref}'})
+        try:
+            tr = tr[0]
+            return True 
+        except IndexError:
+            return False 
+        
+    def gen_transaction_ref(self):
+        numbers = digits
+        letters = ascii_uppercase
+
+        g = True
+
+        while g == True:
+            one = ''.join(choice(numbers) for i in range(5))
+            two = ''.join(choice(letters) for i in range(1))
+            ref = f"TR-{one}{two}"
+            g = self.transaction_exist(ref)
+        
+        return ref
+    
+    
     def error_popup(self, message):
         box = BoxLayout(orientation='vertical', spacing=10, size_hint_y=None)        
         error_img = Image(source='./utils/1.png', size=(150, 150))
@@ -148,7 +203,7 @@ class OperateurWindow(BoxLayout):
                     prdct.append(self.stock[indice][0])
                     prdct.append(add)
                     prdct.append(discount)
-                    prdct.append(tva)
+                    prdct.append(tva) 
                     prdct.append(price)
                     prdct.append(total)
                     self.purchases.append(prdct)
@@ -240,6 +295,8 @@ class OperateurWindow(BoxLayout):
         preview = self.ids.receipt_preview
         #(ref, designation, quantity, discount, vat, price, totall)
         new = self.previewheader
+        today = datetime.today().strftime("%d-%m-%Y")
+        new = f"{new}\nReçu N°: {self.transaction_id}\nDate: {today}\n\n"
         for c, item in enumerate(self.purchases):
             new = new + f"\n({c+1})\t" + str(item[1]).lower()+ "\n"
             new = f"{new}\n{str(item[0])}\t{str(item[5])}\tx\t{str(item[2])}\n"
@@ -260,6 +317,7 @@ class OperateurWindow(BoxLayout):
 
  
     def clear(self):
+        self.transaction_id = self.gen_transaction_ref()
         preview = self.ids.receipt_preview
         preview.text = self.previewheader
         self.ids.products.clear_widgets()
@@ -286,6 +344,66 @@ class OperateurWindow(BoxLayout):
         self.ids.code_inp.focus = True
         
         return 0
+    
+    
+    def update_product(self, ref, price, minus, last_purchase):
+        prdct = self.products.find({'Ref': f'{ref}'})
+        prdct = prdct[0]
+        new_en_stock = int(prdct['en_stock']) - int(minus)
+        sold = int(prdct['vendu']) + int(minus)
+        self.products.update_one({'Ref':ref}, {'$set':{'prix': price, 'en_stock': new_en_stock, 'vendu': sold, 'dernier_achat': last_purchase}})    
+        return 0
+    
+    
+    def validate_transaction(self):
+        today = datetime.today().strftime("%d-%m-%Y")
+        if len(self.purchases) < 1:
+            self.error_popup("Le Panier est vide")
+            self.clear()
+            return 0
+        positions = []
+        item = {}
+        for element in self.purchases:
+            item['ref'] = element[0]
+            item['text'] = element[1]
+            if element[2] == '' or '1':
+                element[2] = 1
+            item['amount'] = int(element[2])
+            if element[4] == 0 or '':
+                item['tax_rate'] = 0
+            else:
+                item['tax_rate'] = float(element[4])*100/float(element[5])
+            item['netto_price'] = int(float(element[5]))-int(float(element[3]))
+            self.update_product(item['ref'], item['netto_price'], item['amount'], today)
+            positions.append(item)
+            
+        self.success_popup("Transaction Enregistré")
+        
+        invoice = {}
+        
+        invoice['date'] = f'{today}'
+        
+        article_info = []
+        article_info.append(invoice)
+            
+        shutil.copy('./utils/data.yml', './documents/invoice/data.yml')
+        
+        original_stdout = sys.stdout
+        
+        with open("./documents/invoice/data.yml", 'a') as yamlfile:
+            data = yaml.dump(positions, yamlfile)
+            sys.stdout = yamlfile
+            print("invoice:")
+            print(f"  number: {self.transaction_id}")
+            print(f"  date: {today}")
+            sys.stdout = original_stdout
+        
+        os.system(f"wsl python3 buildpdf.py --output_pdf ./factures/{self.transaction_id}.pdf")
+        
+        self.clear()
+        
+        
+                            
         
 class OperateurApp(App):
     def build(self):
