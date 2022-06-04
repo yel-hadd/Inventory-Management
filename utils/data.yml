@@ -4,13 +4,6 @@ from:
     postcode: 80000
     city: Agadir
 
-to:
-    name: 
-    street:  
-    postcode: 
-    city: 
-
-customer_number: 10004
 currency: DH
 tax_rate: 19
 

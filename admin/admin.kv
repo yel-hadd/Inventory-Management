@@ -109,6 +109,22 @@
                 group: 'admin_navs'
             ToggleButton:
                 id: products_toggle
+                text: "Transactions"
+                size_hint_y:.1
+                background_color: (.06, 0.45, .35, 1)
+                background_normal: ''
+                on_state: root.change_screen(self)
+                group: 'admin_navs'
+            ToggleButton:
+                id: products_toggle
+                text: "Clients"
+                size_hint_y:.1
+                background_color: (.06, 0.45, .35, 1)
+                background_normal: ''
+                on_state: root.change_screen(self)
+                group: 'admin_navs'
+            ToggleButton:
+                id: products_toggle
                 text: "Calculateur"
                 size_hint_y:.1
                 background_color: (.06, 0.45, .35, 1)
@@ -447,6 +463,12 @@
                     BoxLayout:
                         orientation:  "vertical"
                         spacing: 10
+                        GridLayout:
+                            id: scrn_charges_stats
+                            cols: 6
+                            size_hint_y: None
+                            height: 40
+                            spacing: 10
                         BoxLayout:
                             id: scrn_charges_contents
                         BoxLayout:
@@ -459,6 +481,12 @@
                             spacing: 10
                             size_hint_y: None
                             height: 45
+                            Button:
+                                id: charges_crud_add
+                                text: "Recherche"
+                                on_release: root.search_charge_fields()
+                                background_color: (.06, .45, .45, 1)
+                                background_normal: ''
                             Button:
                                 id: charges_crud_add
                                 text: "Ajouter Charge"
@@ -484,3 +512,103 @@
                                 background_color: (.06, .45, .45, 1)
                                 background_normal: ''
                 
+                Screen:
+                    id: scrn_transaction_content
+                    name:  'scrn_transaction_content'
+                    BoxLayout:
+                        orientation:  "vertical"
+                        spacing: 10
+                        GridLayout:
+                            id: scrn_transaction_stats
+                            cols: 6
+                            size_hint_y: None
+                            height: 40
+                            spacing: 10
+                            Label:
+                                text: "TESSSSST"
+                        BoxLayout:
+                            id: scrn_transaction_contents
+                        BoxLayout:
+                            id: transaction_ops_fields
+                            spacing: 10
+                            size_hint_y: None
+                            height: 35
+                        BoxLayout:
+                            id: transaction_ops_btns
+                            spacing: 10
+                            size_hint_y: None
+                            height: 45
+                            TextInput:
+                                id: tr_id_inp
+                                multiline: False
+                                hint_text: "Ref"
+                            Button:
+                                id: transaction_crud_add
+                                text: "Recherche"
+                                on_release: root.search_transaction_fields()
+                                background_color: (.06, .45, .45, 1)
+                                background_normal: ''
+                            Button:
+                                id: transaction_crud_add
+                                text: "Ouvrir la facture"
+                                on_release: root.open_invoice()
+                                background_color: (.06, .45, .45, 1)
+                                background_normal: ''
+                            Button:
+                                id: transaction_crud_update
+                                text:  'Ouvrir le reçu'
+                                on_release: root.open_reciept()
+                                background_color: (.06, .45, .45, 1)
+                                background_normal: ''
+                            Button:
+                                id: transaction_crud_remove
+                                text:  'Exporter Les Transactions'
+                                on_release: root.export_transactions_xlsx()
+                                background_color: (.06, .45, .45, 1)
+                                background_normal: ''
+                Screen:
+                    id: scrn_clients_content
+                    name:  'scrn_clients_content'
+                    BoxLayout:
+                        orientation:  "vertical"
+                        spacing: 10
+                        BoxLayout:
+                            id: scrn_clients_contents
+                        BoxLayout:
+                            id: clients_ops_fields
+                            spacing: 10
+                            size_hint_y: None
+                            height: 35
+                        #BoxLayout:
+                        #    id: clients_ops_btns
+                        #    spacing: 10
+                        #    size_hint_y: None
+                        #    height: 45
+                        #    Button:
+                        #        id: clients_crud_add
+                        #        text: "Ajouter Charge"
+                        #        on_release: root.add_charge_fields()
+                        #        background_color: (.06, .45, .45, 1)
+                        #        background_normal: ''
+                        #    Button:
+                        #        id: clients_crud_update
+                        #        text:  'Modifier Charge'
+                        #        on_release: root.update_charge_fields()
+                        #        background_color: (.06, .45, .45, 1)
+                        #        background_normal: ''
+                        #    Button:
+                        #        id: clients_crud_remove
+                        #        text:  'Supprimer Charge'
+                        #        on_release: root.remove_charge_fields()
+                        #        background_color: (.06, .45, .45, 1)
+                        #        background_normal: ''
+                        #    Button:
+                        #        id: clients_crud_remove
+                        #        text:  'Exporter Charges'
+                        #        on_release: root.export_charge_xlsx()
+                        #        background_color: (.06, .45, .45, 1)
+                        #        background_normal: ''
+ 
+
+
+

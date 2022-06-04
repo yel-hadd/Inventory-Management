@@ -4,24 +4,24 @@ from:
     postcode: 80000
     city: Agadir
 
-to:
-    name: Client
-    street:  
-    postcode: 80000
-    city: Agadir
-
-customer_number: 10004
 currency: DH
 tax_rate: 19
 
 positions:
 - amount: 1
-  netto_price: 6000
-  ref: TES-6344Q
-  tax_rate: 0
-  text: 'TEST MARQUE TEST MODLE | I7 TEST | 8
+  netto_price: 4500.0
+  ref: TES-6029X
+  tax_rate: 20.0
+  text: 'TEST MARQUE TEST MODLE | I5 TEST | 8
 
     256 SSD | 4 | 0.9'
 invoice:
-  number: TR-85942L
-  date: 30-05-2022
+  number: TR-63221F
+  date: 02-06-2022
+
+
+to:
+    name: 'Raison Sociale: YASSINE'
+    street: 'RC: 678909876543'
+    postcode: 'IF: 34567'
+    city: 'ICE: 88765432'

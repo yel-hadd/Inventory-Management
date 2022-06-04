@@ -20,6 +20,7 @@ from PIL import ImageFont, ImageDraw
 import PIL.Image
 import qrcode
 import os
+import re
 
 
 # TIDY UP CODE BY SCREEN
@@ -32,6 +33,8 @@ class AdminWindow(BoxLayout):
         self.users = db.users
         self.products = db.stocks
         self.charges = db.charges
+        self.transactions = db.transactions
+        self.clients = db.clients
         
         # display users
         content = self.ids.scrn_contents
@@ -63,11 +66,23 @@ class AdminWindow(BoxLayout):
         prod_table  = DataTable(table=products)
         supplier_scrn.add_widget(prod_table)
         
-        # scrn_supplier_contents
+        # scrn_charges_contents
         charges_scrn = self.ids.scrn_charges_contents
         products = self.get_charges()
         prod_table  = DataTable(table=products)
         charges_scrn.add_widget(prod_table)
+        
+        # scrn_transaction_contents
+        tr_scrn = self.ids.scrn_transaction_contents
+        products = self.get_transactions()
+        prod_table  = DataTable(table=products)
+        tr_scrn.add_widget(prod_table)
+        
+        # scrn_clients_contents
+        tr_scrn = self.ids.scrn_clients_contents
+        products = self.get_clients()
+        prod_table  = DataTable(table=products)
+        tr_scrn.add_widget(prod_table)
         
  
     def calculate_price(self):
@@ -1271,7 +1286,44 @@ class AdminWindow(BoxLayout):
         return 0
 
 
+    def export_transactions_xlsx(self):
+        path = tkinter.filedialog.askdirectory()
+        if path == '':
+            return 0
+        
+        _stocks = self.get_transactions()
+        
+        titles = _stocks.keys()
+        titles = list(titles)
 
+        titles2 = ['Ref', 'Totale HT', 'TVA', 'Totale TTC', 'Date']
+
+        product = []
+        all_products = []
+
+        for c, v in enumerate(_stocks['Ref']):
+            for count, value in enumerate(titles):
+                product.append(_stocks[titles[count]][c])
+            all_products.append(product)
+            product = []
+            
+        
+        filename = '/transactions-'
+
+        all_products.insert(0, titles2)
+
+        wb = openpyxl.Workbook()
+        ws_write = wb.worksheets[0]
+
+        for p in all_products:
+            ws_write.append(p)
+
+        today = datetime.today().strftime("%d-%m-%Y")
+        wb.save(filename=f'{path}{filename}{today}.xlsx')
+        
+        self.success_popup('Tous les transactions ont été exportés')
+        
+        return 0
 
 
     def import_xlsx(self):
@@ -1823,11 +1875,11 @@ class AdminWindow(BoxLayout):
         self.crud_comment = TextInput(hint_text='Commentaire', multiline=False)
         crud_search =  Button(text='Recherche', on_release=lambda x:self.u_p_autofill(crud_code.text),
                               background_color=(0.184, 0.216, 0.231), background_normal='')
-        crud_submit_p =  Button(text='Modifier Produit', size_hint_x=1/8, width=100,
+        crud_submit_p =  Button(text='Modifier Produit', size_hint_x=1/8, width=100,# price, buy_price, exchange, stock, sold, order, supplier, last_purchase, comment)
                                 on_release=lambda x:self.update_product(crud_code.text, self.crud_marque.text, self.crud_modele.text, self.crud_cpu.text,
                                                                         self.crud_ram.text, self.crud_gpu.text, self.crud_stockage.text, self.crud_batterie.text,
                                                                         self.crud_price.text, self.crud_buy_price.text, self.crud_exchange_rate.text, self.crud_stock.text, self.crud_sold.text,
-                                                                        self.crud_order.text, self.crud_fournisseur.text, self.crud_last_purchase.text, self.crud_comment.text), 
+                                                                        self.crud_order.text, self.crud_fournisseur.text, "OMO", self.crud_comment.text), 
                                 background_color=(0.184, 0.216, 0.231), background_normal='')
             
         crud_close_p =  Button(text='Fermer', size_hint_x=1/8, width=100, on_release=lambda x: self.ids.ops_fields_p.clear_widgets(),
@@ -1864,12 +1916,13 @@ class AdminWindow(BoxLayout):
             self.error_popup("la référence n' existe pas")
             return 0
         
+        
         content = self.ids.scrn_product_contents
         content.clear_widgets()
         
         order_scrn = self.ids.scrn_order_contents
         order_scrn.clear_widgets()
-        
+        #TES-3588G	-20000
         if price == '':
             price = '0'
         
@@ -1886,7 +1939,11 @@ class AdminWindow(BoxLayout):
         if comment == '':
             comment = ' '    
         
-        self.products.update_one({'Ref':ref}, {'$set':{'marque': marque, 'modele':modele, 'cpu': cpu, 'ram':ram, 'gpu':gpu, 'stockage': stockage, 'batterie':batterie, 'prix': price,'prix_achat': buy_price, 'en_stock': stock, 'vendu': sold, 'commande': order, 'fournisseur': supplier, 'dernier_achat': last_purchase, 'commentaire':comment}})
+        
+        if last_purchase == "OMO":
+            self.products.update_one({'Ref':ref}, {'$set':{'marque': marque, 'modele':modele, 'cpu': cpu, 'ram':ram, 'gpu':gpu, 'stockage': stockage, 'batterie':batterie, 'prix': price,'prix_achat': buy_price, 'en_stock': stock, 'vendu': sold, 'commande': order, 'fournisseur': supplier, 'commentaire':comment}})
+        else:
+            self.products.update_one({'Ref':ref}, {'$set':{'marque': marque, 'modele':modele, 'cpu': cpu, 'ram':ram, 'gpu':gpu, 'stockage': stockage, 'batterie':batterie, 'prix': price,'prix_achat': buy_price, 'en_stock': stock, 'vendu': sold, 'commande': order, 'fournisseur': supplier, 'dernier_achat': last_purchase, 'commentaire':comment}})
         
         products = self.get_products()
         usertable  = DataTable(table=products)
@@ -2048,6 +2105,43 @@ class AdminWindow(BoxLayout):
         return 0
 
 
+    def transaction_exist(self, ref):
+        tr = self.transactions.find({'Ref': f'{ref}'})
+        try:
+            tr = tr[0]
+            return True 
+        except IndexError:
+            return False
+        
+    def open_reciept(self):
+        ref = self.ids.tr_id_inp.text
+        print(ref)
+        if self.transaction_exist(ref):
+            try:
+                os.startfile(f".\\recu\\{ref}.txt")
+                return 0
+            except FileNotFoundError:
+                self.error_popup("Fichier Introuvable")
+                return 0
+        else:
+            self.error_popup("Réference Invalide")
+            return 0
+
+    
+    def open_invoice(self):
+        ref = self.ids.tr_id_inp.text
+        if self.transaction_exist(ref):
+            try:
+                os.startfile(f".\\factures\\{ref}.pdf")
+                return 0
+            except FileNotFoundError:
+                self.error_popup("Fichier Introuvable")
+                return 0
+        else:
+            self.error_popup("Réference Invalide")
+            return 0
+
+
     def update_charge(self, ref, motif, montant, date):
         if ref == '':
             self.missing_field_popup(field="Nom d'utilisateur")
@@ -2076,20 +2170,73 @@ class AdminWindow(BoxLayout):
             return False 
 
 
-    def get_charges(self):
-        charges = self.charges
+    def search_charges(self, month, year):
         
+        charges_scrn = self.ids.scrn_charges_contents
+        charges_scrn.clear_widgets()
+        self.ids.scrn_charges_stats.clear_widgets()
+        
+        charges = self.charges
+
+        if month != '':
+            reg = f'{month}-{year}$'
+        else:
+            reg = f'{year}$'
+
         _charges = {}
         _charges['Ref'] = {}
         _charges['montant'] = {}
         _charges['motif'] = {}
-        _charges['date'] = {}        
-        
+        _charges['date'] = {}
+
         ref = []
         motifs = []
         montants = []
         dates = []
+        for user in charges.find():
+            if re.search(reg, user['date']) != None:
+                ref.append(user['Ref'])
+                motifs.append(user['motif'])
+                montants.append(user['montant'])
+                dates.append(user['date'])
 
+        for c, v in enumerate(ref):
+            _charges['Ref'][c] = ref[c]
+            _charges['motif'][c] = motifs[c]
+            _charges['montant'][c] = montants[c]
+            _charges['date'][c] = dates[c]
+
+        somme_charges = []
+        
+        for element in montants:
+            somme_charges.append(float(element))
+            
+        somme_charges = sum(somme_charges)
+        chargeslabel = Label(text=f'Somme: {somme_charges} DH', bold=True, color=(0,0,0,1))
+        self.ids.scrn_charges_stats.add_widget(chargeslabel)
+        
+        prod_table  = DataTable(table=_charges)
+        charges_scrn.add_widget(prod_table)
+        
+        return _charges
+
+
+    def get_charges(self):
+        
+        charges = self.charges
+        
+        self.ids.scrn_charges_stats.clear_widgets()
+
+        _charges = {}
+        _charges['Ref'] = {}
+        _charges['montant'] = {}
+        _charges['motif'] = {}
+        _charges['date'] = {}
+
+        ref = []
+        motifs = []
+        montants = []
+        dates = []
         for user in charges.find():
             ref.append(user['Ref'])
             motifs.append(user['motif'])
@@ -2101,10 +2248,111 @@ class AdminWindow(BoxLayout):
             _charges['motif'][c] = motifs[c]
             _charges['montant'][c] = montants[c]
             _charges['date'][c] = dates[c]
+            
+        somme_charges = []
+        
+        for element in montants:
+            somme_charges.append(float(element))
+            
+        somme_charges = sum(somme_charges)
+        chargeslabel = Label(text=f'Somme: {somme_charges} DH', bold=True, color=(0,0,0,1))
+        self.ids.scrn_charges_stats.add_widget(chargeslabel)
         
         return _charges
     
+
+    def get_transactions(self):
+        charges = self.transactions
+        self.ids.scrn_transaction_stats.clear_widgets()
+        
+        _charges = {}
+        _charges['Ref'] = {}
+        _charges['Totale_HT'] = {}
+        _charges['TVA'] = {}
+        _charges['Totale_TTC'] = {}
+        _charges['date'] = {}
+        
+        ref = []
+        total_ht = []
+        tva = []
+        total_ttc = []
+        date = []
+
+        for user in charges.find():
+            ref.append(user['Ref'])
+            total_ht.append(user['Totale_HT'])
+            tva.append(user['TVA'])
+            total_ttc.append(user['Totale_TTC'])
+            date.append(user['date'])
+
+        for c, v in enumerate(ref):
+            _charges['Ref'][c] = ref[c]
+            _charges['Totale_HT'][c] = total_ht[c]
+            _charges['TVA'][c] = tva[c]
+            _charges['Totale_TTC'][c] = total_ttc[c]
+            _charges['date'][c] = date[c]
+            
+        somme_ttc = []
+        somme_tva = []
+        somme_ht = []
+        
+        for c, element in enumerate(total_ht):
+            somme_ttc.append(float(total_ttc[c]))
+            somme_tva.append(float(tva[c]))
+            somme_ht.append(float(total_ht[c]))
+        
+        somme_ttc = sum(somme_ttc)
+        somme_tva = sum(somme_tva)
+        somme_ht = sum(somme_ht)
+        
+        htlabel = Label(text=f'Somme HT: {somme_ht} DH', bold=True, color=(0,0,0,1))
+        ttclabel = Label(text=f'Somme TTC: {somme_ttc} DH', bold=True, color=(0,0,0,1))
+        tvalabel = Label(text=f'Somme TVA: {somme_tva} DH', bold=True, color=(0,0,0,1))
+        
+        self.ids.scrn_transaction_stats.add_widget(htlabel)
+        self.ids.scrn_transaction_stats.add_widget(tvalabel)
+        self.ids.scrn_transaction_stats.add_widget(ttclabel)
+        
+        return _charges
+
+
+    def get_clients(self):
+        charges = self.clients
+                
+        _charges = {}
+        _charges['Ref'] = {}
+        _charges['RS'] = {}
+        _charges['RC'] = {}
+        _charges['IF'] = {}
+        _charges['ICE'] = {}
+        _charges['date'] = {}
+        
+        ref = []
+        rs = []
+        rc = []
+        idf = []
+        ice = []
+        date = []
+
+        for user in charges.find():
+            ref.append(user['Ref'])
+            rs.append(user['RS'])
+            rc.append(user['RC'])
+            idf.append(user['IF'])
+            ice.append(user['ICE'])
+            date.append(user['date'])
+
+        for c, v in enumerate(ref):
+            _charges['Ref'][c] = ref[c]
+            _charges['RS'][c] = rs[c]
+            _charges['RC'][c] = rc[c]
+            _charges['IF'][c] = idf[c]
+            _charges['ICE'][c] = ice[c]
+            _charges['date'][c] = date[c]
+        
+        return _charges
     
+   
     def add_charge(self, ref, motif, montant, date):
         if ref == '':
             return 0
@@ -2130,7 +2378,7 @@ class AdminWindow(BoxLayout):
         charges_table  = DataTable(table=charges)
         charge_scrn.add_widget(charges_table)
         
-        self.success_popup("Carge Ajouté")
+        self.success_popup("Charge Ajouté")
         
         return 0
     
@@ -2219,6 +2467,136 @@ class AdminWindow(BoxLayout):
         return 0
     
     
+    def search_charge_fields(self):
+        target = self.ids.charges_ops_fields
+        target.clear_widgets()
+        crud_month = TextInput(hint_text="Mois", multiline=False)
+        crud_year = TextInput(hint_text="Année", multiline=False)
+        crud_submit =  Button(text='Rechercher', size_hint_x=None, width=100, background_color=(0.184, 0.216, 0.231), background_normal='',
+                            on_release=lambda x: self.search_charges(crud_month.text, crud_year.text))
+        crud_reset =  Button(text='Effacer', size_hint_x=None, width=100, background_color=(0.184, 0.216, 0.231), background_normal='',
+                            on_release=lambda x: self.charges_defaults())
+        crud_close =  Button(text='Fermer', size_hint_x=None, width=100, background_color=(0.184, 0.216, 0.231), background_normal='',
+                            on_release=lambda x: self.ids.charges_ops_fields.clear_widgets())
+        target.add_widget(crud_month)
+        target.add_widget(crud_year)
+        target.add_widget(crud_submit)
+        target.add_widget(crud_reset)
+        target.add_widget(crud_close)
+
+        return 0
+    
+    
+    def search_transaction_fields(self):
+        
+        target = self.ids.transaction_ops_fields
+        target.clear_widgets()
+        crud_month = TextInput(hint_text="Mois", multiline=False)
+        crud_year = TextInput(hint_text="Année", multiline=False)
+        crud_submit =  Button(text='Rechercher', size_hint_x=None, width=100, background_color=(0.184, 0.216, 0.231), background_normal='',
+                            on_release=lambda x: self.search_transactions(crud_month.text, crud_year.text))
+        crud_reset =  Button(text='Effacer', size_hint_x=None, width=100, background_color=(0.184, 0.216, 0.231), background_normal='',
+                            on_release=lambda x: self.transaction_defaults())
+        crud_close =  Button(text='Fermer', size_hint_x=None, width=100, background_color=(0.184, 0.216, 0.231), background_normal='',
+                            on_release=lambda x: self.ids.transaction_ops_fields.clear_widgets())
+        target.add_widget(crud_month)
+        target.add_widget(crud_year)
+        target.add_widget(crud_submit)
+        target.add_widget(crud_reset)
+        target.add_widget(crud_close)
+
+        return 0
+    
+
+    def transaction_defaults(self):
+        # scrn_transaction_contents
+        tr_scrn = self.ids.scrn_transaction_contents
+        tr_scrn.clear_widgets()
+        products = self.get_transactions()
+        prod_table  = DataTable(table=products)
+        tr_scrn.add_widget(prod_table)
+        
+        return 0
+    
+    def charges_defaults(self):
+        charges_scrn = self.ids.scrn_charges_contents
+        charges_scrn.clear_widgets()
+        products = self.get_charges()
+        prod_table  = DataTable(table=products)
+        charges_scrn.add_widget(prod_table)
+        
+        return 0
+
+
+    def search_transactions(self, month, year):
+        tr_scrn = self.ids.scrn_transaction_contents
+        tr_scrn.clear_widgets()
+        self.ids.scrn_transaction_stats.clear_widgets()
+        
+        charges = self.transactions
+        
+        if month != '':
+            reg = f'{month}-{year}$'
+        else:
+            reg = f'{year}$'
+        
+        _charges = {}
+        _charges['Ref'] = {}
+        _charges['Totale_HT'] = {}
+        _charges['TVA'] = {}
+        _charges['Totale_TTC'] = {}
+        _charges['date'] = {}
+        
+        ref = []
+        total_ht = []
+        tva = []
+        total_ttc = []
+        date = []
+        
+
+        for user in charges.find():
+            if re.search(reg, user['date']) != None:
+                ref.append(user['Ref'])
+                total_ht.append(user['Totale_HT'])
+                tva.append(user['TVA'])
+                total_ttc.append(user['Totale_TTC'])
+                date.append(user['date'])
+
+        for c, v in enumerate(ref):
+            _charges['Ref'][c] = ref[c]
+            _charges['Totale_HT'][c] = total_ht[c]
+            _charges['TVA'][c] = tva[c]
+            _charges['Totale_TTC'][c] = total_ttc[c]
+            _charges['date'][c] = date[c]
+            
+        somme_ttc = []
+        somme_tva = []
+        somme_ht = []
+        
+        for c, element in enumerate(total_ht):
+            somme_ttc.append(float(total_ttc[c]))
+            somme_tva.append(float(tva[c]))
+            somme_ht.append(float(total_ht[c]))
+        
+        somme_ttc = sum(somme_ttc)
+        somme_tva = sum(somme_tva)
+        somme_ht = sum(somme_ht)
+        
+        htlabel = Label(text=f'Somme HT: {somme_ht} DH', bold=True, color=(0,0,0,1))
+        ttclabel = Label(text=f'Somme TTC: {somme_ttc} DH', bold=True, color=(0,0,0,1))
+        tvalabel = Label(text=f'Somme TVA: {somme_tva} DH', bold=True, color=(0,0,0,1))
+        
+        self.ids.scrn_transaction_stats.add_widget(htlabel)
+        self.ids.scrn_transaction_stats.add_widget(tvalabel)
+        self.ids.scrn_transaction_stats.add_widget(ttclabel)
+        
+        # scrn_transaction_contents
+        prod_table  = DataTable(_charges)
+        tr_scrn.add_widget(prod_table)
+        
+        return _charges
+
+    
     def remove_user(self, username):
         if username == '':
             self.missing_field_popup(field="Nom d'utilisateur")
@@ -2252,6 +2630,10 @@ class AdminWindow(BoxLayout):
             self.ids.scrn_mngr.current = 'scrn_search_content'
         elif instance.text == 'Fournisseurs':
             self.ids.scrn_mngr.current = 'scrn_supplier_content'
+        elif instance.text == 'Transactions':
+            self.ids.scrn_mngr.current = 'scrn_transaction_content'
+        elif instance.text == 'Clients':
+            self.ids.scrn_mngr.current = 'scrn_clients_content'
         return 0
 
 

@@ -173,6 +173,32 @@
                         spacing: 15
                         size_hint_y: None
                         height: self.minimum_height
+                BoxLayout:
+                    orientation: "horizontal"
+                    size_hint_y: .09
+                    spacing: 5
+                    height: 30
+                    TextInput:
+                        hint_text: "Raison sociale"
+                        id: rs
+                        multiline: False
+                        on_text_validate: rc.focus = True
+                    TextInput:
+                        hint_text: "RC"
+                        id: rc
+                        multiline: False
+                        on_text_validate: idf.focus = True
+                    TextInput:
+                        hint_text: "IF"
+                        id: idf
+                        multiline: False
+                        on_text_validate: ice.focus = True
+                    TextInput:
+                        hint_text: "ICE"
+                        id: ice
+                        multiline: False
+                        on_text_validate: rs.focus = True
+
         BoxLayout:
             id: preview
             orientation: 'vertical'

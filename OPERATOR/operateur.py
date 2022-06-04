@@ -2,10 +2,8 @@ from kivy.app import App
 from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.label import Label
 from kivy.uix.image import Image
-import re
 from pymongo import MongoClient
 from kivy.uix.modalview import ModalView
-from collections import OrderedDict
 import itertools
 import os
 from  random import choice
@@ -14,9 +12,6 @@ import yaml
 import shutil
 from datetime import datetime
 import sys
-from threading import Thread
-
-
 
 
 class OperateurWindow(BoxLayout):
@@ -28,6 +23,7 @@ class OperateurWindow(BoxLayout):
         self.stocks = db.stocks
         self.products = db.stocks
         self.transactions = db.transactions
+        self.clients = db.clients
         
         self.cart = []
         self.cartsummary = {}
@@ -44,9 +40,10 @@ class OperateurWindow(BoxLayout):
         self.previewheader = self.ids.receipt_preview.text
         
         self.transaction_id = self.gen_transaction_ref()
+        self.client_id = self.gen_client_ref()
         
         
-        
+          
     def success_popup(self, operation):
         box = BoxLayout(orientation='vertical', spacing=10, size_hint_y=None)        
         error_img = Image(source='./utils/2.png', size=(150, 150))
@@ -71,6 +68,7 @@ class OperateurWindow(BoxLayout):
             return True 
         except IndexError:
             return False 
+ 
         
     def gen_transaction_ref(self):
         numbers = digits
@@ -86,7 +84,31 @@ class OperateurWindow(BoxLayout):
         
         return ref
     
+ 
+    def client_exist(self, ref):
+        tr = self.clients.find({'Ref': f'{ref}'})
+        try:
+            tr = tr[0]
+            return True 
+        except IndexError:
+            return False 
+
     
+    def gen_client_ref(self):
+        numbers = digits
+        letters = ascii_uppercase
+
+        g = True
+
+        while g == True:
+            one = ''.join(choice(numbers) for i in range(5))
+            two = ''.join(choice(letters) for i in range(1))
+            ref = f"C-{two}{one}"
+            g = self.client_exist(ref)
+        
+        return ref
+
+   
     def error_popup(self, message):
         box = BoxLayout(orientation='vertical', spacing=10, size_hint_y=None)        
         error_img = Image(source='./utils/1.png', size=(150, 150))
@@ -134,6 +156,22 @@ class OperateurWindow(BoxLayout):
                 self.ids.qty_inp.focus = True
                 return 0
         
+        if self.ids.disc_inp.text == '':
+            self.ids.disc_inp.text = '0'
+        
+        if self.ids.disc_perc_inp.text == '':
+            self.ids.disc_perc_inp.text == '0'
+        
+        if float(self.ids.disc_inp.text) > float(self.ids.price_inp.text):
+            self.error_popup("la remise ne peut pas être\nsupérieure au prix de vente")
+            self.ids.disc_inp.focus = True
+            return 0
+        
+        if int(self.ids.disc_perc_inp.text) > 100:
+            self.error_popup("la remise ne peut pas être\nsupérieure à 100 %")
+            self.ids.disc_perc_inp.focus = True
+            return 0
+        
         # check if the product exists
         try:
             if  self.stock[self.stockindex.index(ref)][1] == 'Out of stock':
@@ -153,26 +191,26 @@ class OperateurWindow(BoxLayout):
             price = float(self.ids.price_inp.text)
         except:
             if self.ids.price_inp.text == '':
-                print("Champ Manquant")
+                self.error_popup("Champ Manquant")
                 self.ids.price_inp.focus = True
                 return 0
             else:
-                print("Invalid Input")
+                self.error_popup("Entrée Invalide")
                 return 0
         try:
             discount = float(self.ids.disc_inp.text)
         except:
             if self.ids.disc_inp.text == '':
-                discount = 0
+                discount = 0  
             else:
-                self.error_popup("Invalid Input")
+                self.error_popup("Entrée Invalide")
                 return 0
         
         try:
             discount_per = float(self.ids.disc_perc_inp.text)
         except:
             if self.ids.disc_perc_inp.text == '':
-                discount_per = 0
+                discount_per = 0           
             else:
                 self.error_popup("Invalid Input")
                 self.ids.disc_perc_inp.focus = True
@@ -188,9 +226,11 @@ class OperateurWindow(BoxLayout):
                 self.error_popup('Invalid Input')
         
         discount_per = price*discount_per/100
-        tva = price*tva/100
-        total = price-discount-discount_per+tva
         discount = discount + discount_per
+        tvap = tva
+        tva = (price-discount)*tva/100
+        total = price-discount+tva
+        
         
         
         # check if there  is enough stock
@@ -206,6 +246,7 @@ class OperateurWindow(BoxLayout):
                     prdct.append(tva) 
                     prdct.append(price)
                     prdct.append(total)
+                    prdct.append(tvap)
                     self.purchases.append(prdct)
                     prdct = []
             else:
@@ -223,6 +264,7 @@ class OperateurWindow(BoxLayout):
                     prdct.append(tva)
                     prdct.append(price)
                     prdct.append(total)
+                    prdct.append(tvap)
                     self.purchases.append(prdct)
                     prdct = []
                     #self.detailedsummary[f"{ref}"] = self.stock[indice]
@@ -243,11 +285,11 @@ class OperateurWindow(BoxLayout):
         self.cartsummary = dict((item, self.cart.count(item)) for item in self.cart)
         self.update_reciept()
         
-        print(self.cartsummary)
-        print(total)
+        #print(self.cartsummary)
+        #print(total)
         self.ids.code_inp.text = ''
         self.ids.code_inp.focus = True
-        print("done")
+        #print("done")
         return 0
         
         
@@ -279,8 +321,8 @@ class OperateurWindow(BoxLayout):
 
         pname = designation
 
-        pprice = float(totall)
-        self.total += pprice
+        pprice = float(price.text)
+        #self.total += pprice
 
         curprdct = self.ids.cur_product
         curprdct.text = pname
@@ -292,16 +334,23 @@ class OperateurWindow(BoxLayout):
 
 
     def update_reciept(self):
+        ttl = []
+        tva = []
         preview = self.ids.receipt_preview
         #(ref, designation, quantity, discount, vat, price, totall)
         new = self.previewheader
         today = datetime.today().strftime("%d-%m-%Y")
         new = f"{new}\nReçu N°: {self.transaction_id}\nDate: {today}\n\n"
         for c, item in enumerate(self.purchases):
+            #print(self.purchases)
             new = new + f"\n({c+1})\t" + str(item[1]).lower()+ "\n"
-            new = f"{new}\n{str(item[0])}\t{str(item[5])}\tx\t{str(item[2])}\n"
+            new = f"{new}\n{str(item[0])}\t{str(float(item[5])-float(item[3]))}\tx\t{str(item[2])}\n"
+            ttl.append(float(item[5])-float(item[3]))
+            tva.append(float(item[6]))
 
-        new = new + "\n" + "\n" + F"Totale: {self.total}"
+        self.total = sum(ttl)
+        new = new + "\n" + "\n" + F"Totale HT: {self.total}"
+        new = new + "\n" + F"Totale TTC: {sum(tva)}"
 
         preview.text = new
 
@@ -318,6 +367,7 @@ class OperateurWindow(BoxLayout):
  
     def clear(self):
         self.transaction_id = self.gen_transaction_ref()
+        self.client_id = self.gen_client_ref()
         preview = self.ids.receipt_preview
         preview.text = self.previewheader
         self.ids.products.clear_widgets()
@@ -341,6 +391,12 @@ class OperateurWindow(BoxLayout):
         self.ids.disc_inp.text = ''
         self.ids.disc_perc_inp.text = ''
         self.ids.vat_inp.text = ''
+        
+        self.ids.rs.text = ''
+        self.ids.rc.text = ''
+        self.ids.idf.text = ''
+        self.ids.ice.text = ''
+        
         self.ids.code_inp.focus = True
         
         return 0
@@ -349,6 +405,10 @@ class OperateurWindow(BoxLayout):
     def update_product(self, ref, price, minus, last_purchase):
         prdct = self.products.find({'Ref': f'{ref}'})
         prdct = prdct[0]
+        if prdct['vendu'] == '':
+            prdct['vendu'] = 0
+        if prdct['en_stock'] == '':
+            prdct['en_stock'] = 0
         new_en_stock = int(prdct['en_stock']) - int(minus)
         sold = int(prdct['vendu']) + int(minus)
         self.products.update_one({'Ref':ref}, {'$set':{'prix': price, 'en_stock': new_en_stock, 'vendu': sold, 'dernier_achat': last_purchase}})    
@@ -363,47 +423,75 @@ class OperateurWindow(BoxLayout):
             return 0
         positions = []
         item = {}
+        
+        
+        #[ref, 'designation', quantity, réduction, tva, price, price-reduction+tva]
+        sumht = []
+        sumtva = []
+        sumttc = []
         for element in self.purchases:
             item['ref'] = element[0]
             item['text'] = element[1]
             if element[2] == '' or '1':
                 element[2] = 1
             item['amount'] = int(element[2])
-            if element[4] == 0 or '':
+            if element[7] == 0 or '':
                 item['tax_rate'] = 0
             else:
-                item['tax_rate'] = float(element[4])*100/float(element[5])
-            item['netto_price'] = int(float(element[5]))-int(float(element[3]))
+                item['tax_rate'] = float(element[7])
+            item['netto_price'] = float(float(element[5]))-int(float(element[3]))
+            
+            # calculate to add to transactions table
+            
+            httemp = item['netto_price']*item['amount']
+            sumht.append(httemp)
+            tvatemp = httemp*item['tax_rate']/100
+            sumtva.append(tvatemp)
+            sumttc.append(httemp+tvatemp)
+            
+            self.transactions.insert_one({'Ref': self.transaction_id, 'Totale_HT': sum(sumht), 'TVA': sum(sumtva), 'Totale_TTC': sum(sumttc), 'date': today})
             self.update_product(item['ref'], item['netto_price'], item['amount'], today)
+            
             positions.append(item)
+            item = {}
             
-        self.success_popup("Transaction Enregistré")
+        self.success_popup("Transaction Enregistré")   
         
-        invoice = {}
-        
-        invoice['date'] = f'{today}'
-        
-        article_info = []
-        article_info.append(invoice)
-            
         shutil.copy('./utils/data.yml', './documents/invoice/data.yml')
         
         original_stdout = sys.stdout
-        
+     
         with open("./documents/invoice/data.yml", 'a') as yamlfile:
             data = yaml.dump(positions, yamlfile)
             sys.stdout = yamlfile
             print("invoice:")
             print(f"  number: {self.transaction_id}")
             print(f"  date: {today}")
-            sys.stdout = original_stdout
+            print("\n")
+            print(f'customer_number: {self.client_id}')
+            print("\n")
+            print("to:")
+            print(f"    name: 'Raison Sociale: {self.ids.rs.text}'")
+            print(f"    street: 'RC: {self.ids.rc.text}'")
+            print(f"    postcode: 'IF: {self.ids.idf.text}'")
+            print(f"    city: 'ICE: {self.ids.ice.text}'")
+            
+        
+        with open(f"./recu/{self.transaction_id}.txt", 'w') as txtfile:
+            sys.stdout = txtfile
+            print(self.ids.receipt_preview.text)
+        
+        sys.stdout = original_stdout
+        
+        if self.ids.rs.text != '':
+            self.clients.insert_one({'Ref': self.client_id, 'RS': self.ids.rs.text, 'RC': self.ids.rc.text, 'IF': self.ids.idf.text, 'ICE': self.ids.ice.text, 'date': today})
         
         os.system(f"wsl python3 buildpdf.py --output_pdf ./factures/{self.transaction_id}.pdf")
+    
+        #os.remove('./documents/invoice/data.yml')
         
         self.clear()
-        
-        
-                            
+                         
         
 class OperateurApp(App):
     def build(self):
