@@ -1,9 +1,14 @@
 from kivy.app import App
 from kivy.uix.boxlayout import BoxLayout
+from pymongo import MongoClient
+
 
 class SigninWindow(BoxLayout):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
+        client = MongoClient()
+        db = client.pos
+        self.users = db.users
 
     def validate_user(self):
         user = self.ids.username_field

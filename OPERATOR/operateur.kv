@@ -17,7 +17,7 @@
         height: 40
         canvas.before:
             Color:
-                rgba: (.06, .45, .45, 1)
+                rgba: (0, 0.306, 0.561, 1)
             Rectangle:
                 size: self.size
                 pos: self.pos
@@ -44,18 +44,19 @@
         Button:
             text: 'Article actuel'
             background_normal: ''
-            background_color: (.06, .32, .32, 1)
+            background_color: (0.145, 0.376, 0.541, 1)
             size_hint_x: .4
         Button:
             id: cur_product
             text: 'Désignation'
             background_normal: ''
-            background_color: (.06, .4, .4, 1)
+            background_color: (0.173, 0.51, 0.757, 1)
         Button: 
             id: cur_price
             text: '0.00'
+            color: (0, 0, 0, 1)
             background_normal: ''
-            background_color: (.06, .65, .65, 1)
+            background_color: (0.667, 0.769, 0.851, 1)
             size_hint_x: .2
 
     BoxLayout:
@@ -72,7 +73,7 @@
                 height: 40
                 canvas.before:
                     Color:
-                        rgba: (.06,.45,.45, 1)
+                        rgba: (0.145, 0.376, 0.541, 1)
                     Rectangle:
                         size: self.size
                         pos: self.pos
@@ -141,7 +142,7 @@
                     height: 30
                     canvas.before:
                         Color:
-                            rgba: (.06, .45,.45, 1)
+                            rgba: (0.145, 0.376, 0.541, 1)
                         Rectangle:
                             size: self.size
                             pos: self.pos
@@ -168,6 +169,7 @@
                         size_hint_x: .2
                 ScrollView:
                     GridLayout:
+                        padding: (0, 5)
                         id: products
                         cols: 1
                         spacing: 15
@@ -219,12 +221,12 @@
 
                 Button:
                     text: "Enregistrer"
-                    background_color: (.06, .45, .45, 1)
+                    background_color: (0.145, 0.376, 0.541, 1)
                     background_normal: ''
                     on_release: root.validate_transaction()
                 Button:
                     text: "Effacer"
-                    background_color: (.06, .45, .45, 1)
+                    background_color: (0.145, 0.376, 0.541, 1)
                     background_normal: ''
                     on_release: root.clear()
 
@@ -235,7 +237,7 @@
         height: 30
         canvas.before:
             Color:
-                rgba: (.06, .47, .47, 1)
+                rgba: (0.145, 0.376, 0.541, 1)
             Rectangle:
                 pos: self.pos
                 size: self.size

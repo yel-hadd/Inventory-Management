@@ -1,5 +1,11 @@
 <FlatButton@ButtonBehavior+Label>:
     text: 'default'
+    canvas.before:
+        Color:
+            rgba: (0, 0.306, 0.561, 1)
+        Rectangle:
+            size: self.size
+            pos: self.pos
 <AdminWindow>:
     id: main_win
     orientation: 'vertical'
@@ -16,7 +22,7 @@
         height: 30
         canvas.before:
             Color:
-                rgba: (.06, .45, .45, 1)
+                rgba: (0.145, 0.376, 0.541, 1)
             Rectangle:
                 size: self.size
                 pos: self.pos
@@ -30,7 +36,6 @@
 
             Widget:
                 on_parent: file_dropdown.dismiss()
-
                 DropDown:
                     id: file_dropdown
                     Button:
@@ -43,6 +48,12 @@
             bold: True
             size_hint: (.9, None)
             height: 30
+            canvas.before:
+                Color:
+                    rgba: (0, 0.306, 0.561, 1)
+                Rectangle:
+                    size: self.size
+                    pos: self.pos
     
     
     BoxLayout:
@@ -54,7 +65,7 @@
             orientation: 'vertical'
             canvas.before:
                 Color:
-                    rgba: (.06, .40, .40, 1)
+                    rgba: (0.145, 0.376, 0.541, 1)
                 Rectangle:
                     size: self.size
                     pos: self.pos
@@ -63,7 +74,7 @@
                 text: "Utilisateurs"
                 size_hint_y:.1
                 state: 'down'
-                background_color: (.06, 0.45, .35, 1)
+                background_color: (0.145, 0.376, 0.541, 1)
                 background_normal: ''
                 on_state: root.change_screen(self)
                 group: 'admin_navs'
@@ -71,7 +82,7 @@
                 id: products_toggle
                 text: "Inventaire"
                 size_hint_y:.1
-                background_color: (.06, 0.45, .35, 1)
+                background_color: (0.145, 0.376, 0.541, 1)
                 background_normal: ''
                 group: 'admin_navs'
                 on_state: root.change_screen(self)
@@ -79,7 +90,7 @@
                 id: products_toggle
                 text: "Recherche"
                 size_hint_y:.1
-                background_color: (.06, 0.45, .35, 1)
+                background_color: (0.145, 0.376, 0.541, 1)
                 background_normal: ''
                 group: 'admin_navs'
                 on_state: root.change_screen(self)
@@ -87,7 +98,7 @@
                 id: products_toggle
                 text: "Commandes"
                 size_hint_y:.1
-                background_color: (.06, 0.45, .35, 1)
+                background_color: (0.145, 0.376, 0.541, 1)
                 background_normal: ''
                 on_state: root.change_screen(self)
                 group: 'admin_navs'
@@ -95,7 +106,7 @@
                 id: products_toggle
                 text: "Fournisseurs"
                 size_hint_y:.1
-                background_color: (.06, 0.45, .35, 1)
+                background_color: (0.145, 0.376, 0.541, 1)
                 background_normal: ''
                 on_state: root.change_screen(self)
                 group: 'admin_navs'
@@ -103,7 +114,7 @@
                 id: products_toggle
                 text: "Charges"
                 size_hint_y:.1
-                background_color: (.06, 0.45, .35, 1)
+                background_color: (0.145, 0.376, 0.541, 1)
                 background_normal: ''
                 on_state: root.change_screen(self)
                 group: 'admin_navs'
@@ -111,7 +122,7 @@
                 id: products_toggle
                 text: "Transactions"
                 size_hint_y:.1
-                background_color: (.06, 0.45, .35, 1)
+                background_color: (0.145, 0.376, 0.541, 1)
                 background_normal: ''
                 on_state: root.change_screen(self)
                 group: 'admin_navs'
@@ -119,7 +130,7 @@
                 id: products_toggle
                 text: "Clients"
                 size_hint_y:.1
-                background_color: (.06, 0.45, .35, 1)
+                background_color: (0.145, 0.376, 0.541, 1)
                 background_normal: ''
                 on_state: root.change_screen(self)
                 group: 'admin_navs'
@@ -127,7 +138,7 @@
                 id: products_toggle
                 text: "Calculateur"
                 size_hint_y:.1
-                background_color: (.06, 0.45, .35, 1)
+                background_color: (0.145, 0.376, 0.541, 1)
                 background_normal: ''
                 group: 'admin_navs'
                 on_state: root.change_screen(self)
@@ -165,19 +176,19 @@
                                 id: crud_add
                                 text: "Ajouter Utilisateur"
                                 on_release: root.add_user_fields()
-                                background_color: (.06, .45, .45, 1)
+                                background_color: (0.145, 0.376, 0.541, 1)
                                 background_normal: ''
                             Button:
                                 id: crud_update
                                 text:  'Modifier Utilisateur'
                                 on_release: root.update_user_fields()
-                                background_color: (.06, .45, .45, 1)
+                                background_color: (0.145, 0.376, 0.541, 1)
                                 background_normal: ''
                             Button:
                                 id: crud_remove
                                 text:  'Supprimer Utilisateur'
                                 on_release: root.remove_user_fields()
-                                background_color: (.06, .45, .45, 1)
+                                background_color: (0.145, 0.376, 0.541, 1)
                                 background_normal: ''
                 Screen:
                     id: scrn_product_content
@@ -208,37 +219,43 @@
                                 id: crud_add_p
                                 text: "Ajouter Produit"
                                 on_release: root.add_product_fields()
-                                background_color: (.06, .45, .45, 1)
+                                background_color: (0.145, 0.376, 0.541, 1)
                                 background_normal: ''
                             Button:
                                 id: crud_update_p
                                 text:  'Modifier Produit'
                                 on_release: root.update_product_fields()
-                                background_color: (.06, .45, .45, 1)
+                                background_color: (0.145, 0.376, 0.541, 1)
+                                background_normal: ''
+                            Button:
+                                id: crud_retour_p
+                                text:  'Retourner Produit'
+                                on_release: root.return_product_fields()
+                                background_color: (0.145, 0.376, 0.541, 1)
                                 background_normal: ''
                             Button:
                                 id: crud_remove_p
                                 text:  'Supprimer Produit'
                                 on_release: root.remove_product_fields()
-                                background_color: (.06, .45, .45, 1)
+                                background_color: (0.145, 0.376, 0.541, 1)
                                 background_normal: ''
                             Button:
                                 id: crud_export_bulk
                                 text: "Imprimer Ticket"
                                 on_release: root.add_print_fields()
-                                background_color: (.06, .45, .45, 1)
+                                background_color: (0.145, 0.376, 0.541, 1)
                                 background_normal: ''
                             Button:
                                 id: crud_export_bulk
                                 text: "Exporter Excel"
                                 on_release: root.export_excel_fields()
-                                background_color: (.06, .45, .45, 1)
+                                background_color: (0.145, 0.376, 0.541, 1)
                                 background_normal: ''
                             Button:
                                 id: crud_add_bulk
                                 text: "Importer Excel"
                                 on_release: root.import_xlsx()
-                                background_color: (.06, .45, .45, 1)
+                                background_color: (0.145, 0.376, 0.541, 1)
                                 background_normal: ''
                 Screen:
                     id: content
@@ -267,27 +284,27 @@
                                 id: search_b
                                 text: "Rechercher"
                                 on_release: root.get_order()
-                                background_color: (.06, .45, .45, 1)
+                                background_color: (0.145, 0.376, 0.541, 1)
                                 background_normal: ''
                             Button:
                                 id: export_order_all
                                 text: "Exporter Tous Les Produits"
                                 on_release: root.export_order_xlsx()
-                                background_color: (.06, .45, .45, 1)
+                                background_color: (0.145, 0.376, 0.541, 1)
                                 background_normal: ''
 
                             Button:
                                 id: export_order_stock
                                 text: "Exporter Les Produits En Stock"
                                 on_release: root.export_order_xlsx(True)
-                                background_color: (.06, .45, .45, 1)
+                                background_color: (0.145, 0.376, 0.541, 1)
                                 background_normal: ''
 
                             Button:
                                 id: print_order_labels
                                 text: "Imprimer les Tickets"
                                 on_release: root.create_order_labels(order_id.text)
-                                background_color: (.06, .45, .45, 1)
+                                background_color: (0.145, 0.376, 0.541, 1)
                                 background_normal: ''
                 Screen:
                     id: content
@@ -317,19 +334,19 @@
                                 id: search_b_s
                                 text: "Rechercher"
                                 on_release: root.get_supp()
-                                background_color: (.06, .45, .45, 1)
+                                background_color: (0.145, 0.376, 0.541, 1)
                                 background_normal: ''
                             Button:
                                 id: export_all_b_s
                                 text: "Exporter Tous Les Produits"
                                 on_release: root.export_supp_xlsx()
-                                background_color: (.06, .45, .45, 1)
+                                background_color: (0.145, 0.376, 0.541, 1)
                                 background_normal: ''
                             Button:
                                 id: export_stock_b_s
                                 text: "Exporter Les Produits En Stock"
                                 on_release: root.export_supp_xlsx(True)
-                                background_color: (.06, .45, .45, 1)
+                                background_color: (0.145, 0.376, 0.541, 1)
                                 background_normal: ''
                 Screen:
                     id: content
@@ -403,7 +420,7 @@
                                 id: calculate_button
                                 text: "Calculer"
                                 on_release: root.calculate_price()
-                                background_color: (.06, .45, .45, 1)
+                                background_color: (0.145, 0.376, 0.541, 1)
                                 background_normal: ''
                                 size_hint_y: None
                                 size_hint_x: .2
@@ -449,13 +466,13 @@
                                 id: search_b_s
                                 text: "Rechercher"
                                 on_release: root.get_product()
-                                background_color: (.06, .45, .45, 1)
+                                background_color: (0.145, 0.376, 0.541, 1)
                                 background_normal: ''
                             Button:
                                 id: print_prod_label
                                 text: "Imprimer le Ticket"
                                 on_release: root.create_label(prod_id.text)
-                                background_color: (.06, .45, .45, 1)
+                                background_color: (0.145, 0.376, 0.541, 1)
                                 background_normal: ''
                 Screen:
                     id: scrn_charges_content
@@ -485,31 +502,31 @@
                                 id: charges_crud_add
                                 text: "Recherche"
                                 on_release: root.search_charge_fields()
-                                background_color: (.06, .45, .45, 1)
+                                background_color: (0.145, 0.376, 0.541, 1)
                                 background_normal: ''
                             Button:
                                 id: charges_crud_add
                                 text: "Ajouter Charge"
                                 on_release: root.add_charge_fields()
-                                background_color: (.06, .45, .45, 1)
+                                background_color: (0.145, 0.376, 0.541, 1)
                                 background_normal: ''
                             Button:
                                 id: charges_crud_update
                                 text:  'Modifier Charge'
                                 on_release: root.update_charge_fields()
-                                background_color: (.06, .45, .45, 1)
+                                background_color: (0.145, 0.376, 0.541, 1)
                                 background_normal: ''
                             Button:
                                 id: charges_crud_remove
                                 text:  'Supprimer Charge'
                                 on_release: root.remove_charge_fields()
-                                background_color: (.06, .45, .45, 1)
+                                background_color: (0.145, 0.376, 0.541, 1)
                                 background_normal: ''
                             Button:
                                 id: charges_crud_remove
                                 text:  'Exporter Charges'
                                 on_release: root.export_charge_xlsx()
-                                background_color: (.06, .45, .45, 1)
+                                background_color: (0.145, 0.376, 0.541, 1)
                                 background_normal: ''
                 
                 Screen:
@@ -546,25 +563,25 @@
                                 id: transaction_crud_add
                                 text: "Recherche"
                                 on_release: root.search_transaction_fields()
-                                background_color: (.06, .45, .45, 1)
+                                background_color: (0.145, 0.376, 0.541, 1)
                                 background_normal: ''
                             Button:
                                 id: transaction_crud_add
                                 text: "Ouvrir la facture"
                                 on_release: root.open_invoice()
-                                background_color: (.06, .45, .45, 1)
+                                background_color: (0.145, 0.376, 0.541, 1)
                                 background_normal: ''
                             Button:
                                 id: transaction_crud_update
                                 text:  'Ouvrir le reçu'
                                 on_release: root.open_reciept()
-                                background_color: (.06, .45, .45, 1)
+                                background_color: (0.145, 0.376, 0.541, 1)
                                 background_normal: ''
                             Button:
                                 id: transaction_crud_remove
                                 text:  'Exporter Les Transactions'
                                 on_release: root.export_transactions_xlsx()
-                                background_color: (.06, .45, .45, 1)
+                                background_color: (0.145, 0.376, 0.541, 1)
                                 background_normal: ''
                 Screen:
                     id: scrn_clients_content
@@ -588,27 +605,23 @@
                         #        id: clients_crud_add
                         #        text: "Ajouter Charge"
                         #        on_release: root.add_charge_fields()
-                        #        background_color: (.06, .45, .45, 1)
+                        #        background_color: (0.145, 0.376, 0.541, 1)
                         #        background_normal: ''
                         #    Button:
                         #        id: clients_crud_update
                         #        text:  'Modifier Charge'
                         #        on_release: root.update_charge_fields()
-                        #        background_color: (.06, .45, .45, 1)
+                        #        background_color: (0.145, 0.376, 0.541, 1)
                         #        background_normal: ''
                         #    Button:
                         #        id: clients_crud_remove
                         #        text:  'Supprimer Charge'
                         #        on_release: root.remove_charge_fields()
-                        #        background_color: (.06, .45, .45, 1)
+                        #        background_color: (0.145, 0.376, 0.541, 1)
                         #        background_normal: ''
                         #    Button:
                         #        id: clients_crud_remove
                         #        text:  'Exporter Charges'
                         #        on_release: root.export_charge_xlsx()
-                        #        background_color: (.06, .45, .45, 1)
+                        #        background_color: (0.145, 0.376, 0.541, 1)
                         #        background_normal: ''
- 
-
-
-

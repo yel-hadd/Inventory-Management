@@ -1973,7 +1973,59 @@ class AdminWindow(BoxLayout):
         
         return 0
 
+
+    def return_product_fields(self):
+        target = self.ids.ops_fields_p
+        target.clear_widgets()
+        crud_ref = TextInput(hint_text="Référence", multiline=False, width=50, height=5)
+        crud_qty = TextInput(hint_text="Quantité", multiline=False, width=50, height=5)
+        crud_submit =  Button(text='Retourner Produit', size_hint_x=None, width=150, background_color=(0.184, 0.216, 0.231), background_normal='',
+                            on_release=lambda x: self.return_product(crud_ref.text, crud_qty.text))
+        crud_close =  Button(text='Fermer', size_hint_x=None, width=100, on_release=lambda x: self.ids.ops_fields_p.clear_widgets(),
+                            background_color=(0.184, 0.216, 0.231), background_normal='')
+        spacer = Label(text='', size_hint_x=.6)
+        target.add_widget(crud_ref)
+        target.add_widget(crud_qty)
+        target.add_widget(crud_submit)
+        target.add_widget(crud_close)
+        target.add_widget(spacer)
+        return 0
     
+    
+    def return_product(self, ref, minus):
+        if ref == '' or minus == '':
+            return 0
+        
+        if not self.product_exist(ref):
+            self.error_popup("la référence n' existe pas")
+            return 0
+        
+        content = self.ids.scrn_product_contents
+        content.clear_widgets()
+        
+        prdct = self.products.find({'Ref': f'{ref}'})
+        try:
+            prdct = prdct[0]
+        except IndexError:
+            self.error_popup("Réference Invalid")
+            return 0
+        
+        if prdct['vendu'] == '':
+            prdct['vendu'] = 0
+        if prdct['en_stock'] == '':
+            prdct['en_stock'] = 0
+        
+        new_en_stock = int(prdct['en_stock']) + int(minus)
+        sold = int(prdct['vendu']) - int(minus)
+        self.products.update_one({'Ref':ref}, {'$set':{'en_stock': new_en_stock, 'vendu': sold, 'prix': '0'}})
+        
+        products = self.get_products()
+        usertable  = DataTable(table=products)
+        content.add_widget(usertable)
+        
+        return 0
+
+
     def remove_product(self, ref):
         if ref == '':
             self.missing_field_popup(field="Nom d'utilisateur")

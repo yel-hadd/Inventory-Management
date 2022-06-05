@@ -304,7 +304,7 @@ class OperateurWindow(BoxLayout):
         product_container.add_widget(details)
         #thumbnail = Image(size_hint_x=.3/2, source='./1.png')
         code = Label(text=pcode, size_hint_x=.2, color=(0, 0, 0, 1))
-        name = Label(text=designation, size_hint_x=.6, color=(.06, .45, .45, 1), height=10)
+        name = Label(text=designation, size_hint_x=.6, color=(0.678, 0, 0, 1), height=10)
         qty = Label(text=str(quantity), size_hint_x=.1, color=(0, 0, 0, 1))
         disc = Label(text=str(discount), size_hint_x=.1, color=(0, 0, 0, 1))
         tva = Label(text=str(vat), size_hint_x=.1, color=(0, 0, 0, 1))
@@ -453,44 +453,48 @@ class OperateurWindow(BoxLayout):
             self.update_product(item['ref'], item['netto_price'], item['amount'], today)
             
             positions.append(item)
-            item = {}
-            
-        self.success_popup("Transaction Enregistré")   
+            item = {} 
         
-        shutil.copy('./utils/data.yml', './documents/invoice/data.yml')
         
         original_stdout = sys.stdout
-     
-        with open("./documents/invoice/data.yml", 'a') as yamlfile:
-            data = yaml.dump(positions, yamlfile)
-            sys.stdout = yamlfile
-            print("invoice:")
-            print(f"  number: {self.transaction_id}")
-            print(f"  date: {today}")
-            print("\n")
-            print(f'customer_number: {self.client_id}')
-            print("\n")
-            print("to:")
-            print(f"    name: 'Raison Sociale: {self.ids.rs.text}'")
-            print(f"    street: 'RC: {self.ids.rc.text}'")
-            print(f"    postcode: 'IF: {self.ids.idf.text}'")
-            print(f"    city: 'ICE: {self.ids.ice.text}'")
-            
+        
         
         with open(f"./recu/{self.transaction_id}.txt", 'w') as txtfile:
             sys.stdout = txtfile
             print(self.ids.receipt_preview.text)
         
-        sys.stdout = original_stdout
+        
         
         if self.ids.rs.text != '':
             self.clients.insert_one({'Ref': self.client_id, 'RS': self.ids.rs.text, 'RC': self.ids.rc.text, 'IF': self.ids.idf.text, 'ICE': self.ids.ice.text, 'date': today})
+            shutil.copy('./utils/data.yml', './documents/invoice/data.yml')
+            with open("./documents/invoice/data.yml", 'a') as yamlfile:
+                data = yaml.dump(positions, yamlfile)
+                sys.stdout = yamlfile
+                print("invoice:")
+                print(f"  number: {self.transaction_id}")
+                print(f"  date: {today}")
+                print("\n")
+                print(f'customer_number: {self.client_id}')
+                print("\n")
+                print("to:")
+                print(f"    name: 'Raison Sociale: {self.ids.rs.text}'")
+                print(f"    street: 'RC: {self.ids.rc.text}'")
+                print(f"    postcode: 'IF: {self.ids.idf.text}'")
+                print(f"    city: 'ICE: {self.ids.ice.text}'")
         
-        os.system(f"wsl python3 buildpdf.py --output_pdf ./factures/{self.transaction_id}.pdf")
+                os.system(f"wsl python3 buildpdf.py --output_pdf ./factures/{self.transaction_id}.pdf")
+                os.startfile(f".\\factures\\{self.transaction_id}.pdf")
     
-        #os.remove('./documents/invoice/data.yml')
+                os.remove('./documents/invoice/data.yml')
+        
+        sys.stdout = original_stdout
         
         self.clear()
+        
+        self.success_popup("Transaction Enregistré")
+        
+        return 0
                          
         
 class OperateurApp(App):
