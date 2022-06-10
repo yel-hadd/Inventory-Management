@@ -13,6 +13,12 @@ import shutil
 from datetime import datetime
 import sys
 
+from kivy.lang import Builder
+
+
+Builder.load_file('./OPERATOR/operateur.kv')
+
+
 
 class OperateurWindow(BoxLayout):
     def __init__(self, **kwargs):
@@ -42,7 +48,9 @@ class OperateurWindow(BoxLayout):
         self.transaction_id = self.gen_transaction_ref()
         self.client_id = self.gen_client_ref()
         
-        
+    
+    def logout(self):
+        self.parent.parent.current = "scrn_si"
           
     def success_popup(self, operation):
         box = BoxLayout(orientation='vertical', spacing=10, size_hint_y=None)        
@@ -486,7 +494,7 @@ class OperateurWindow(BoxLayout):
                 os.system(f"wsl python3 buildpdf.py --output_pdf ./factures/{self.transaction_id}.pdf")
                 os.startfile(f".\\factures\\{self.transaction_id}.pdf")
     
-                os.remove('./documents/invoice/data.yml')
+                #os.remove('./documents/invoice/data.yml')
         
         sys.stdout = original_stdout
         

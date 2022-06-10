@@ -7,7 +7,6 @@ from OPERATOR.operateur import OperateurWindow
 
 class MainWindow(BoxLayout):
     
-    
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         self.admin_widget = AdminWindow()
@@ -15,6 +14,8 @@ class MainWindow(BoxLayout):
         self.operator_widget = OperateurWindow()
         
         self.ids.scrn_si.add_widget(self.signin_widget)
+        self.ids.scrn_admin.add_widget(self.admin_widget)
+        self.ids.scrn_op.add_widget(self.operator_widget)
 
 class MainApp(App):
     def build(self):

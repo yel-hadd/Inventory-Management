@@ -7,6 +7,8 @@ from kivy.uix.button import Button
 from kivy.uix.spinner import Spinner
 from kivy.uix.modalview import ModalView
 from kivy.uix.boxlayout import BoxLayout
+from kivy.lang import Builder
+
 from pymongo import MongoClient
 from utils.datatable import DataTable
 import hashlib
@@ -21,6 +23,9 @@ import PIL.Image
 import qrcode
 import os
 import re
+
+
+Builder.load_file('./admin/admin.kv')
 
 
 # TIDY UP CODE BY SCREEN
@@ -84,7 +89,11 @@ class AdminWindow(BoxLayout):
         prod_table  = DataTable(table=products)
         tr_scrn.add_widget(prod_table)
         
- 
+
+    def logout(self):
+        self.parent.parent.current = "scrn_si"
+
+
     def calculate_price(self):
         purchase = self.ids.purchase_price_calc.text
         transport = self.ids.transport_calc.text
@@ -1333,10 +1342,18 @@ class AdminWindow(BoxLayout):
             return 0
         
         
-        order_scrn = self.ids.scrn_order_contents
-        order_scrn.clear_widgets()
         content = self.ids.scrn_product_contents
         content.clear_widgets()
+        
+        order_scrn = self.ids.scrn_order_contents
+        order_scrn.clear_widgets()
+        
+        
+        supplier_scrn = self.ids.scrn_supplier_contents
+        supplier_scrn.clear_widgets()
+        
+        search_scrn = self.ids.scrn_search_contents
+        search_scrn.clear_widgets()
         
         
         df = read_excel(path)
@@ -1351,18 +1368,18 @@ class AdminWindow(BoxLayout):
         df['commentaire'] = df['commentaire'].fillna('N/A')
         df['batterie'] = df['batterie'].fillna('Bien')
         df['taux_de_change'] = df['taux_de_change'].fillna(1)
-        
+        df['charges'] = df['charges'].fillna(0)
         
         
         to_numeric(df['vendu'])
         to_numeric(df['taux_de_change'])
         to_numeric(df['en_stock'])
+        to_numeric(df['charges'])
         
-        df['prix_achat'] = df['prix_achat']*df['taux_de_change']
-            
+        df['prix_achat'] = df['prix_achat']*df['taux_de_change']+df['charges']
 
         data = df.to_dict(orient="records")
-
+        
         for record in data:
             record['Ref'] = self.gen_ref(record['marque'])
             record['prix'] = 0
@@ -1372,10 +1389,18 @@ class AdminWindow(BoxLayout):
         self.products.insert_many(data)
         
         products = self.get_products()
-        product_table  = DataTable(table=products)
+        usertable  = DataTable(table=products)
+        content.add_widget(usertable)
+        
         product_table2  = DataTable(table=products)
-        content.add_widget(product_table)
         order_scrn.add_widget(product_table2)
+        
+        product_table3 = DataTable(table=products)
+        supplier_scrn.add_widget(product_table3)
+        
+        
+        product_table4 = DataTable(table=products)
+        search_scrn.add_widget(product_table4)
         
         self.success_popup(f"{len(data)} Produits Importés")
 
@@ -1716,6 +1741,7 @@ class AdminWindow(BoxLayout):
         crud_price = TextInput(hint_text='Prix', multiline=False)
         crud_buy_price = TextInput(hint_text="Prix d'achat", multiline=False)
         exchange_rate = TextInput(hint_text="Taux de change", multiline=False)
+        fees = TextInput(hint_text="Charges", multiline=False)
         crud_stock = TextInput(hint_text='En stock', multiline=False)
         crud_sold = TextInput(hint_text='Vendu', multiline=False)
         crud_order = TextInput(hint_text='Commande', multiline=False)
@@ -1727,12 +1753,9 @@ class AdminWindow(BoxLayout):
                                 on_release=lambda x:self.add_product(self.gen_ref(crud_marque.text), crud_marque.text,
                                                                     crud_modele.text, crud_cpu.text, crud_ram.text, crud_gpu.text,
                                                                     crud_stockage.text, crud_batterie.text, crud_price.text,
-                                                                    crud_buy_price.text, exchange_rate.text, crud_stock.text, crud_sold.text, crud_order.text, 
+                                                                    crud_buy_price.text, exchange_rate.text, fees.text, crud_stock.text, crud_sold.text, crud_order.text, 
                                                                     crud_fournisseur.text, crud_last_purchase.text, crud_comment.text), background_color=(0.184, 0.216, 0.231), background_normal='')
         
-        crud_close_p =  Button(text='Fermer', size_hint_x=1/8, width=100,
-                            on_release=lambda x: self.ids.ops_fields_p.clear_widgets(),
-                            background_color=(0.184, 0.216, 0.231), background_normal='')
         
         target.add_widget(crud_marque)
         target.add_widget(crud_modele)
@@ -1744,19 +1767,18 @@ class AdminWindow(BoxLayout):
         target.add_widget(crud_price)
         target.add_widget(crud_buy_price)
         target.add_widget(exchange_rate)
+        target.add_widget(fees)
         target.add_widget(crud_stock)
         target.add_widget(crud_sold)
         target.add_widget(crud_order)
         target.add_widget(crud_fournisseur)
         target.add_widget(crud_last_purchase)
         target.add_widget(crud_comment)
-        target.add_widget(crud_submit_p)
-        target.add_widget(crud_close_p)
-        
+        target.add_widget(crud_submit_p)        
         return 0
 
 
-    def add_product(self, ref, marque, modele, cpu, ram, gpu, stockage, batterie, price, buy_price, exchange, stock, sold, order, supplier, last_purchase, comment):
+    def add_product(self, ref, marque, modele, cpu, ram, gpu, stockage, batterie, price, buy_price, exchange, fee, stock, sold, order, supplier, last_purchase, comment):
         if ref == '':
             self.missing_field_popup(field='Réf')
             return 0
@@ -1795,10 +1817,13 @@ class AdminWindow(BoxLayout):
             price = '0'
         if exchange == '':
             exchange = 1
-        else:
-            exchange = float(exchange)
-            buy_price = float(buy_price)*exchange
-            buy_price = "{:.2f}".format(buy_price)
+        
+        if fee == '':
+            fee = 0
+        
+        exchange = float(exchange)
+        buy_price = float(buy_price)*exchange+float(fee)
+        buy_price = "{:.2f}".format(buy_price)
             
         if supplier == '':
             supplier = '?'
@@ -1808,6 +1833,9 @@ class AdminWindow(BoxLayout):
         
         content = self.ids.scrn_product_contents
         content.clear_widgets()
+        
+        supplier_scrn = self.ids.scrn_supplier_contents
+        supplier_scrn.clear_widgets()
         
         self.products.insert_one({'Ref':ref, 'marque': marque,
                             'modele':modele, 'cpu': cpu, 'ram':ram, 'gpu':gpu, 'stockage': stockage, 'batterie':batterie, 'prix': price,
@@ -1820,6 +1848,16 @@ class AdminWindow(BoxLayout):
         
         product_table2  = DataTable(table=products)
         order_scrn.add_widget(product_table2)
+        
+        
+        product_table3 = DataTable(table=products)
+        supplier_scrn.add_widget(product_table3)
+        
+        search_scrn = self.ids.scrn_search_contents
+        search_scrn.clear_widgets()
+        
+        product_table4 = DataTable(table=products)
+        search_scrn.add_widget(product_table4)
         
         self.success_popup("Produit Ajouté")
         
@@ -1868,6 +1906,7 @@ class AdminWindow(BoxLayout):
         self.crud_price = TextInput(hint_text='Prix', multiline=False)
         self.crud_buy_price = TextInput(hint_text="Prix d'achat", multiline=False)
         self.crud_exchange_rate = TextInput(hint_text="Taux de change", multiline=False)
+        fee = TextInput(hint_text="Charges", multiline=False)
         self.crud_stock = TextInput(hint_text='En stock', multiline=False)
         self.crud_sold = TextInput(hint_text='Vendu', multiline=False)
         self.crud_order = TextInput(hint_text='Commande', multiline=False)
@@ -1878,12 +1917,9 @@ class AdminWindow(BoxLayout):
         crud_submit_p =  Button(text='Modifier Produit', size_hint_x=1/8, width=100,# price, buy_price, exchange, stock, sold, order, supplier, last_purchase, comment)
                                 on_release=lambda x:self.update_product(crud_code.text, self.crud_marque.text, self.crud_modele.text, self.crud_cpu.text,
                                                                         self.crud_ram.text, self.crud_gpu.text, self.crud_stockage.text, self.crud_batterie.text,
-                                                                        self.crud_price.text, self.crud_buy_price.text, self.crud_exchange_rate.text, self.crud_stock.text, self.crud_sold.text,
+                                                                        self.crud_price.text, self.crud_buy_price.text, self.crud_exchange_rate.text, fee.text, self.crud_stock.text, self.crud_sold.text,
                                                                         self.crud_order.text, self.crud_fournisseur.text, "OMO", self.crud_comment.text), 
                                 background_color=(0.184, 0.216, 0.231), background_normal='')
-            
-        crud_close_p =  Button(text='Fermer', size_hint_x=1/8, width=100, on_release=lambda x: self.ids.ops_fields_p.clear_widgets(),
-                            background_color=(0.184, 0.216, 0.231), background_normal='')
         
         target.add_widget(crud_code)
         target.add_widget(crud_search)
@@ -1897,6 +1933,7 @@ class AdminWindow(BoxLayout):
         target.add_widget(self.crud_price)
         target.add_widget(self.crud_buy_price)
         target.add_widget(self.crud_exchange_rate)
+        target.add_widget(fee)
         target.add_widget(self.crud_stock)
         target.add_widget(self.crud_sold)
         target.add_widget(self.crud_order)
@@ -1907,7 +1944,7 @@ class AdminWindow(BoxLayout):
         return 0
 
   
-    def update_product(self, ref, marque, modele, cpu, ram, gpu, stockage, batterie, price, buy_price, exchange, stock, sold, order, supplier, last_purchase, comment):
+    def update_product(self, ref, marque, modele, cpu, ram, gpu, stockage, batterie, price, buy_price, exchange, fee, stock, sold, order, supplier, last_purchase, comment):
         if ref == '':
             self.missing_field_popup(field="Réf")
             return 0
@@ -1916,22 +1953,28 @@ class AdminWindow(BoxLayout):
             self.error_popup("la référence n' existe pas")
             return 0
         
-        
         content = self.ids.scrn_product_contents
         content.clear_widgets()
         
         order_scrn = self.ids.scrn_order_contents
         order_scrn.clear_widgets()
-        #TES-3588G	-20000
+        
+        
+        supplier_scrn = self.ids.scrn_supplier_contents
+        supplier_scrn.clear_widgets()
+        
         if price == '':
             price = '0'
         
         if exchange == '':
             exchange = 1
-        else:
-            exchange = float(exchange)
-            buy_price = float(buy_price)*exchange
-            buy_price = "{:.2f}".format(buy_price)
+        
+        if fee == '':
+            fee = 0
+        
+        exchange = float(exchange)
+        buy_price = float(buy_price)*exchange+float(fee)
+        buy_price = "{:.2f}".format(buy_price)
         
         if supplier == '':
             supplier = '?'
@@ -1951,6 +1994,16 @@ class AdminWindow(BoxLayout):
         
         product_table2  = DataTable(table=products)
         order_scrn.add_widget(product_table2)
+        
+        product_table3 = DataTable(table=products)
+        supplier_scrn.add_widget(product_table3)
+        
+        
+        search_scrn = self.ids.scrn_search_contents
+        search_scrn.clear_widgets()
+        
+        product_table4 = DataTable(table=products)
+        search_scrn.add_widget(product_table4)
 
         self.success_popup("Produit Modifié")
         
@@ -2003,6 +2056,13 @@ class AdminWindow(BoxLayout):
         content = self.ids.scrn_product_contents
         content.clear_widgets()
         
+        order_scrn = self.ids.scrn_order_contents
+        order_scrn.clear_widgets()
+        
+        
+        supplier_scrn = self.ids.scrn_supplier_contents
+        supplier_scrn.clear_widgets()
+        
         prdct = self.products.find({'Ref': f'{ref}'})
         try:
             prdct = prdct[0]
@@ -2023,6 +2083,18 @@ class AdminWindow(BoxLayout):
         usertable  = DataTable(table=products)
         content.add_widget(usertable)
         
+        product_table2  = DataTable(table=products)
+        order_scrn.add_widget(product_table2)
+        
+        product_table3 = DataTable(table=products)
+        supplier_scrn.add_widget(product_table3)
+        
+        search_scrn = self.ids.scrn_search_contents
+        search_scrn.clear_widgets()
+        
+        product_table4 = DataTable(table=products)
+        search_scrn.add_widget(product_table4)
+        
         return 0
 
 
@@ -2040,6 +2112,9 @@ class AdminWindow(BoxLayout):
         order_scrn = self.ids.scrn_order_contents
         order_scrn.clear_widgets()
         
+        supplier_scrn = self.ids.scrn_supplier_contents
+        supplier_scrn.clear_widgets()
+        
         self.products.delete_many({"Ref":ref})
         
         products = self.get_products()
@@ -2048,6 +2123,15 @@ class AdminWindow(BoxLayout):
         
         product_table2  = DataTable(table=products)
         order_scrn.add_widget(product_table2)
+        
+        search_scrn = self.ids.scrn_search_contents
+        search_scrn.clear_widgets()
+        
+        product_table4 = DataTable(table=products)
+        search_scrn.add_widget(product_table4)
+        
+        product_table3 = DataTable(table=products)
+        supplier_scrn.add_widget(product_table3)
             
         self.success_popup(f"le Produit {ref} a été Supprimé")
         return 0

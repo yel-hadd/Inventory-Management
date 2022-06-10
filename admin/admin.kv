@@ -27,24 +27,8 @@
                 size: self.size
                 pos: self.pos
             
-        FlatButton:
-            id: file_trigger
-            text: "Fichier"
-            on_release: file_dropdown.open(self)
-            size_hint: (.1, None)
-            height: 30
-
-            Widget:
-                on_parent: file_dropdown.dismiss()
-                DropDown:
-                    id: file_dropdown
-                    Button:
-                        id: close
-                        text: "quitter"
-                        size_hint_y: None
-                        height: 30
         Label:
-            text: 'PRONTO IT | Portail Administrateur'
+            text: 'PRONTO IT'
             bold: True
             size_hint: (.9, None)
             height: 30
@@ -54,8 +38,14 @@
                 Rectangle:
                     size: self.size
                     pos: self.pos
-    
-    
+        FlatButton:
+            id: loggedin_user
+            text: ''
+            color: (1,1,1,1)
+            underline: True
+            on_release: root.logout()
+            size_hint: (.2, None)
+            height: 30
     BoxLayout:
         id: content_nav
 
@@ -206,7 +196,7 @@
                             id: scrn_product_contents
                         GridLayout:
                             id: ops_fields_p
-                            cols: 9
+                            cols: 10
                             spacing: 5
                             size_hint_y: None
                             height: 70

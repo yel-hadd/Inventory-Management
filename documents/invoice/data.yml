@@ -9,19 +9,22 @@ tax_rate: 19
 
 positions:
 - amount: 1
-  netto_price: 4500.0
-  ref: TES-6029X
+  netto_price: 2304.0
+  ref: SIM-4558P
   tax_rate: 20.0
-  text: 'TEST MARQUE TEST MODLE | I5 TEST | 8
+  text: 'DELL HP | pentium | 8
 
-    256 SSD | 4 | 0.9'
+    1 To SSD | STANDARD | 90%'
 invoice:
-  number: TR-63221F
-  date: 02-06-2022
+  number: TR-49931P
+  date: 06-06-2022
+
+
+customer_number: C-Y17233
 
 
 to:
-    name: 'Raison Sociale: YASSINE'
-    street: 'RC: 678909876543'
-    postcode: 'IF: 34567'
-    city: 'ICE: 88765432'
+    name: 'Raison Sociale: yaseen'
+    street: 'RC: 123456789'
+    postcode: 'IF: 98765'
+    city: 'ICE: 23456789'
