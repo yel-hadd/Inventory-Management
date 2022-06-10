@@ -285,7 +285,6 @@ class AdminWindow(BoxLayout):
             return 0
         products = self.products
 
-        
         if for_export:
             _stocks = {}
             _stocks['Ref'] = {}
@@ -296,8 +295,10 @@ class AdminWindow(BoxLayout):
             _stocks['stockage'] = {}
             _stocks['gpu'] = {}
             _stocks['batterie'] = {}
-            _stocks['prix'] = {}
-            _stocks['prix_achat'] = {}
+            
+            _stocks["cout d'achat"] = {}
+            _stocks['prix de vente'] = {}
+            _stocks['gain'] = {}
             _stocks['en_stock'] = {}
             _stocks['vendu'] = {}
             _stocks['commande'] = {}
@@ -308,6 +309,7 @@ class AdminWindow(BoxLayout):
             Ref = []
             prix = []
             prix_achat = []
+            gain = []
             marque = []
             modele = []
             cpu = []
@@ -324,11 +326,27 @@ class AdminWindow(BoxLayout):
 
             for product in products.find({"commande": f"{orderref}"}):
                 Ref.append(product['Ref'])
-                prix.append(product['prix'])
+                try:
+                    prix.append(product['prix'])
+                except:
+                    prix.append('0')
                 try:
                     prix_achat.append(product['prix_achat'])
                 except KeyError:
-                    prix_achat.append('')
+                    prix_achat.append('0')
+
+                try:
+                    tbuy_p = float(product['prix_achat'])
+                except:
+                    tbuy_p = 0
+                    
+                try:
+                    tsell_p = float(product['prix'])
+                except:
+                    tsell_p = 0
+                
+                gain.append(tsell_p-tbuy_p)
+                
                 marque.append(product['marque'])
                 modele.append(product['modele'])
                 cpu.append(product['cpu'])
@@ -361,14 +379,14 @@ class AdminWindow(BoxLayout):
                 try:    
                     commentaire.append(product['commentaire'])
                 except KeyError:
-                    commentaire.append('****')
+                    commentaire.append('****')        
 
             sum_purchase_price = []
             sum_sold_list = []
             sold_items = []
             in_stock_items = []
             in_stock_items_price = []
-
+            
             for c, v in enumerate(Ref):
                 _stocks['Ref'][c] = Ref[c]
                 _stocks['marque'][c] = marque[c]
@@ -378,8 +396,9 @@ class AdminWindow(BoxLayout):
                 _stocks['stockage'][c] = stockage[c]
                 _stocks['gpu'][c] = gpu[c]
                 _stocks['batterie'][c] = batterie[c]
-                _stocks['prix'][c] = prix[c]
-                _stocks['prix_achat'][c] = prix_achat[c]
+                _stocks['prix de vente'][c] = prix[c]
+                _stocks["cout d'achat"][c] = prix_achat[c]
+                _stocks["gain"][c] = gain[c]
                 _stocks['en_stock'][c] = en_stock[c]
                 _stocks['vendu'][c] = vendu[c]
                 _stocks['commande'][c] = commande[c]
@@ -400,8 +419,9 @@ class AdminWindow(BoxLayout):
             _stocks = {}
             _stocks['Ref'] = {}
             _stocks['designation'] = {}
-            _stocks['prix'] = {}
-            _stocks['prix_achat'] = {}
+            _stocks["cout d'achat"] = {}
+            _stocks['prix de vente'] = {}
+            _stocks['gain'] = {}
             _stocks['en_stock'] = {}
             _stocks['vendu'] = {}
             _stocks['commande'] = {}
@@ -425,6 +445,8 @@ class AdminWindow(BoxLayout):
             fournisseur = []
             dernier_achat = []
             commentaire = []
+            gain = []
+            charges = []
 
             for product in products.find({"commande": f"{orderref}"}):
                 Ref.append(product['Ref'])
@@ -466,7 +488,24 @@ class AdminWindow(BoxLayout):
                     commentaire.append(product['commentaire'])
                 except KeyError:
                     commentaire.append('****')
-
+                
+                try:
+                    tbuy_p = float(product['prix_achat'])
+                except:
+                    tbuy_p = 0
+                    
+                try:
+                    tsell_p = float(product['prix'])
+                except:
+                    tsell_p = 0
+                
+                gain.append(tsell_p-tbuy_p)
+                
+                try:
+                    charges.append(float(product['charges']))
+                except:
+                    charges.append(0)
+                    
             sum_purchase_price = []
             sum_sold_list = []
             sold_items = []
@@ -476,14 +515,15 @@ class AdminWindow(BoxLayout):
             for c, v in enumerate(Ref):
                 _stocks['Ref'][c] = Ref[c]
                 _stocks['designation'][c] = f"{marque[c]} {modele[c]} | {cpu[c]} | {ram[c]}GB\n{stockage[c]} | {gpu[c]} | {batterie[c]}"
-                _stocks['prix'][c] = prix[c]
-                _stocks['prix_achat'][c] = prix_achat[c]
+                _stocks['prix de vente'][c] = prix[c]
+                _stocks["cout d'achat"][c] = prix_achat[c]
                 _stocks['en_stock'][c] = en_stock[c]
                 _stocks['vendu'][c] = vendu[c]
                 _stocks['commande'][c] = commande[c]
                 _stocks['dernier_achat'][c] = dernier_achat[c]
                 _stocks['commentaire'][c] = commentaire[c]
                 _stocks['fournisseur'][c] = fournisseur[c]
+                _stocks['gain'][c] = gain[c]
             
                 if vendu[c] == '':
                     vendu[c] = 0
@@ -519,12 +559,14 @@ class AdminWindow(BoxLayout):
             solditemslabel = Label(text=f'Produits Vendu:\n{sold_items}', bold=True, color=(0,0,0,1))
             soldproductspricelabel = Label(text=f'Prix des produits Vendu:\n{sold_products_price} DH', bold=True, color=(0,0,0,1))
             profitlabel = Label(text=f'Profit:\n{profit} DH', bold=True, color=(0,0,0,1))
+            chargeslabel = Label(text=f'Frais:\n{sum(charges)} DH', bold=True, color=(0,0,0,1))
 
             stats.add_widget(totalorderpricelabel)
             stats.add_widget(instockitemslabel)
             stats.add_widget(instockitemspricelabel)
             stats.add_widget(solditemslabel)
             stats.add_widget(soldproductspricelabel)
+            stats.add_widget(chargeslabel)
             stats.add_widget(profitlabel)
         return _stocks
 
@@ -546,8 +588,9 @@ class AdminWindow(BoxLayout):
             _stocks['stockage'] = {}
             _stocks['gpu'] = {}
             _stocks['batterie'] = {}
-            _stocks['prix'] = {}
-            _stocks['prix_achat'] = {}
+            _stocks["cout d'achat"] = {}
+            _stocks['prix de vente'] = {}
+            _stocks['gain'] = {}
             _stocks['en_stock'] = {}
             _stocks['vendu'] = {}
             _stocks['commande'] = {}
@@ -571,6 +614,7 @@ class AdminWindow(BoxLayout):
             fournisseur = []
             dernier_achat = []
             commentaire = []
+            gain = []
 
             for product in products.find({"fournisseur": f"{orderref}"}):
                 Ref.append(product['Ref'])
@@ -612,6 +656,18 @@ class AdminWindow(BoxLayout):
                     commentaire.append(product['commentaire'])
                 except KeyError:
                     commentaire.append('****')
+                
+                try:
+                    tbuy_p = float(product['prix_achat'])
+                except:
+                    tbuy_p = 0
+
+                try:
+                    tsell_p = float(product['prix'])
+                except:
+                    tsell_p = 0
+
+                gain.append(tsell_p-tbuy_p)
 
             sum_purchase_price = []
             sum_sold_list = []
@@ -628,14 +684,16 @@ class AdminWindow(BoxLayout):
                 _stocks['stockage'][c] = stockage[c]
                 _stocks['gpu'][c] = gpu[c]
                 _stocks['batterie'][c] = batterie[c]
-                _stocks['prix'][c] = prix[c]
-                _stocks['prix_achat'][c] = prix_achat[c]
+                _stocks['prix de vente'][c] = prix[c]
+                _stocks["cout d'achat"][c] = prix_achat[c]
                 _stocks['en_stock'][c] = en_stock[c]
                 _stocks['vendu'][c] = vendu[c]
                 _stocks['commande'][c] = commande[c]
                 _stocks['dernier_achat'][c] = dernier_achat[c]
                 _stocks['commentaire'][c] = commentaire[c]
                 _stocks['fournisseur'][c] = fournisseur[c]
+                _stocks['gain'][c] = gain[c]
+                
             
                 if vendu[c] == '':
                     vendu[c] = 0
@@ -650,8 +708,9 @@ class AdminWindow(BoxLayout):
             _stocks = {}
             _stocks['Ref'] = {}
             _stocks['designation'] = {}
-            _stocks['prix'] = {}
-            _stocks['prix_achat'] = {}
+            _stocks["cout d'achat"] = {}
+            _stocks['prix de vente'] = {}
+            _stocks['gain'] = {}
             _stocks['en_stock'] = {}
             _stocks['vendu'] = {}
             _stocks['commande'] = {}
@@ -675,6 +734,7 @@ class AdminWindow(BoxLayout):
             fournisseur = []
             dernier_achat = []
             commentaire = []
+            gain = []
 
             for product in products.find({"fournisseur": f"{orderref}"}):
                 Ref.append(product['Ref'])
@@ -716,6 +776,17 @@ class AdminWindow(BoxLayout):
                     commentaire.append(product['commentaire'])
                 except KeyError:
                     commentaire.append('****')
+                try:
+                    tbuy_p = float(product['prix_achat'])
+                except:
+                    tbuy_p = 0
+
+                try:
+                    tsell_p = float(product['prix'])
+                except:
+                    tsell_p = 0
+
+                gain.append(tsell_p-tbuy_p)
 
             sum_purchase_price = []
             sum_sold_list = []
@@ -726,14 +797,15 @@ class AdminWindow(BoxLayout):
             for c, v in enumerate(Ref):
                 _stocks['Ref'][c] = Ref[c]
                 _stocks['designation'][c] = f"{marque[c]} {modele[c]} | {cpu[c]} | {ram[c]}GB\n{stockage[c]} | {gpu[c]} | {batterie[c]}"
-                _stocks['prix'][c] = prix[c]
-                _stocks['prix_achat'][c] = prix_achat[c]
+                _stocks['prix de vente'][c] = prix[c]
+                _stocks["cout d'achat"][c] = prix_achat[c]
                 _stocks['en_stock'][c] = en_stock[c]
                 _stocks['vendu'][c] = vendu[c]
                 _stocks['commande'][c] = commande[c]
                 _stocks['dernier_achat'][c] = dernier_achat[c]
                 _stocks['commentaire'][c] = commentaire[c]
                 _stocks['fournisseur'][c] = fournisseur[c]
+                _stocks['gain'][c] = gain[c]
             
                 if vendu[c] == '':
                     vendu[c] = 0
@@ -797,9 +869,10 @@ class AdminWindow(BoxLayout):
             _stocks['ram'] = {}
             _stocks['stockage'] = {}
             _stocks['gpu'] = {}
-            _stocks['batterie'] = {}
-            _stocks['prix'] = {}
-            _stocks['prix_achat'] = {}
+            _stocks['batterie'] = {} 
+            _stocks["cout d'achat"] = {}
+            _stocks['prix de vente'] = {}
+            _stocks['gain'] = {}
             _stocks['en_stock'] = {}
             _stocks['vendu'] = {}
             _stocks['commande'] = {}
@@ -823,6 +896,7 @@ class AdminWindow(BoxLayout):
             fournisseur = []
             dernier_achat = []
             commentaire = []
+            gain = []
 
             for product in self.products.find({"Ref": f"{orderref}"}):
                 Ref.append(product['Ref'])
@@ -864,6 +938,18 @@ class AdminWindow(BoxLayout):
                     commentaire.append(product['commentaire'])
                 except KeyError:
                     commentaire.append('****')
+                    
+                try:
+                    tbuy_p = float(product['prix_achat'])
+                except:
+                    tbuy_p = 0
+                    
+                try:
+                    tsell_p = float(product['prix'])
+                except:
+                    tsell_p = 0
+                
+                gain.append(tsell_p-tbuy_p)
 
             for c, v in enumerate(Ref):
                 _stocks['Ref'] = Ref[c]
@@ -874,15 +960,16 @@ class AdminWindow(BoxLayout):
                 _stocks['stockage'] = stockage[c]
                 _stocks['gpu'] = gpu[c]
                 _stocks['batterie'] = batterie[c]
-                _stocks['prix'] = prix[c]
-                _stocks['prix_achat'] = prix_achat[c]
+                _stocks['prix de vente'] = prix[c]
+                _stocks["cout d'achat"] = prix_achat[c]
                 _stocks['en_stock'] = en_stock[c]
                 _stocks['vendu'] = vendu[c]
                 _stocks['commande'] = commande[c]
                 _stocks['dernier_achat'] = dernier_achat[c]
                 _stocks['commentaire'] = commentaire[c]
                 _stocks['fournisseur'] = fournisseur[c]
-            
+                _stocks['gain'] = gain[c]
+
                 if vendu[c] == '':
                     vendu[c] = 0
 
@@ -897,8 +984,10 @@ class AdminWindow(BoxLayout):
         _stocks = {}
         _stocks['Ref'] = {}
         _stocks['designation'] = {}
-        _stocks['prix'] = {}
-        _stocks['prix_achat'] = {}
+        
+        _stocks["cout d'achat"] = {}
+        _stocks['prix de vente'] = {}
+        _stocks['gain'] = {}
         _stocks['en_stock'] = {}
         _stocks['vendu'] = {}
         _stocks['commande'] = {}
@@ -921,6 +1010,8 @@ class AdminWindow(BoxLayout):
         fournisseur = []
         dernier_achat = []
         commentaire = []
+        gain = []
+        
         for product in self.products.find({"Ref": f"{orderref}"}):
             Ref.append(product['Ref'])
             prix.append(product['prix'])
@@ -964,19 +1055,31 @@ class AdminWindow(BoxLayout):
                 commentaire.append(product['commentaire'])
             except KeyError:
                 commentaire.append('')
-
+                
+            try:
+                tbuy_p = float(product['prix_achat'])
+            except:
+                tbuy_p = 0
+                
+            try:
+                tsell_p = float(product['prix'])
+            except:
+                tsell_p = 0
+                
+            gain.append(tsell_p-tbuy_p)
+        
         for c, v in enumerate(Ref):
             _stocks['Ref'][c] = Ref[c]
             _stocks['designation'][c] = f"{marque[c]} {modele[c]} | {cpu[c]} | {ram[c]}GB\n{stockage[c]} | {gpu[c]} | {batterie[c]}"
-            _stocks['prix'][c] = prix[c]
-            _stocks['prix_achat'][c] = prix_achat[c]
+            _stocks['prix de vente'][c] = prix[c]
+            _stocks["cout d'achat"][c] = prix_achat[c]
             _stocks['en_stock'][c] = en_stock[c]
             _stocks['vendu'][c] = vendu[c]
             _stocks['commande'][c] = commande[c]
             _stocks['fournisseur'][c] = fournisseur[c]
             _stocks['dernier_achat'][c] = dernier_achat[c]
             _stocks['commentaire'][c] = commentaire[c]
-
+            _stocks['gain'][c] = gain[c]
         
         products = _stocks
         prod_table  = DataTable(table=products)
@@ -1096,7 +1199,7 @@ class AdminWindow(BoxLayout):
         titles = list(titles)
 
         titles2 = ['Ref', 'Marque', 'Modele', 'CPU', 'RAM', 'Stockage', 'GPU', 'Batterie', 'Prix De Vente',
-                   "Prix D'achat", 'En stock', 'Vendu', 'Commande', 'Fournisseur', 'Dernier Achat',
+                   "cout d'achat", 'En stock', 'Vendu', 'Commande', 'Fournisseur', 'Dernier Achat',
                    'Commentaire']
 
         product = []
@@ -1159,7 +1262,7 @@ class AdminWindow(BoxLayout):
         titles = list(titles)
 
         titles2 = ['Ref', 'Marque', 'Modele', 'CPU', 'RAM', 'Stockage', 'GPU', 'Batterie', 'Prix De Vente',
-                   "Prix D'achat", 'En stock', 'Vendu', 'Commande', 'Fournisseur', 'Dernier Achat',
+                   "cout d'achat", 'En stock', 'Vendu', 'Commande', 'Fournisseur', 'Dernier Achat',
                    'Commentaire']
 
         product = []
@@ -1214,7 +1317,7 @@ class AdminWindow(BoxLayout):
         titles = list(titles)
 
         titles2 = ['Ref', 'Marque', 'Modele', 'CPU', 'RAM', 'Stockage', 'GPU', 'Batterie', 'Prix De Vente',
-                   "Prix D'achat", 'En stock', 'Vendu', 'Commande', 'Fournisseur', 'Dernier Achat',
+                   "cout d'achat", 'En stock', 'Vendu', 'Commande', 'Fournisseur', 'Dernier Achat',
                    'Commentaire']
 
         product = []
@@ -1370,13 +1473,18 @@ class AdminWindow(BoxLayout):
         df['taux_de_change'] = df['taux_de_change'].fillna(1)
         df['charges'] = df['charges'].fillna(0)
         
-        
         to_numeric(df['vendu'])
         to_numeric(df['taux_de_change'])
         to_numeric(df['en_stock'])
         to_numeric(df['charges'])
         
-        df['prix_achat'] = df['prix_achat']*df['taux_de_change']+df['charges']
+        charge = df['charges'].head(1)
+        
+        charge = float(charge)/df.shape[0]
+        
+        df['charges'] = charge
+        
+        df['prix_achat'] = df['prix_achat']*df['taux_de_change']+charge
 
         data = df.to_dict(orient="records")
         
@@ -1398,12 +1506,11 @@ class AdminWindow(BoxLayout):
         product_table3 = DataTable(table=products)
         supplier_scrn.add_widget(product_table3)
         
-        
         product_table4 = DataTable(table=products)
         search_scrn.add_widget(product_table4)
         
         self.success_popup(f"{len(data)} Produits Importés")
-
+        
         return 0
     
     
@@ -1477,8 +1584,9 @@ class AdminWindow(BoxLayout):
             _stocks['stockage'] = {}
             _stocks['gpu'] = {}
             _stocks['batterie'] = {}
-            _stocks['prix'] = {}
-            _stocks['prix_achat'] = {}
+            _stocks["cout d'achat"] = {}
+            _stocks['prix de vente'] = {}
+            _stocks['gain'] = {}
             _stocks['en_stock'] = {}
             _stocks['vendu'] = {}
             _stocks['commande'] = {}
@@ -1502,6 +1610,8 @@ class AdminWindow(BoxLayout):
             fournisseur = []
             dernier_achat = []
             commentaire = []
+            
+            gain = []
 
             for product in products.find():
                 Ref.append(product['Ref'])
@@ -1543,6 +1653,19 @@ class AdminWindow(BoxLayout):
                     commentaire.append(product['commentaire'])
                 except KeyError:
                     commentaire.append('****')
+                    
+                    
+                try:
+                    tbuy_p = float(product['prix_achat'])
+                except:
+                    tbuy_p = 0
+                    
+                try:
+                    tsell_p = float(product['prix'])
+                except:
+                    tsell_p = 0
+                
+                gain.append(tsell_p-tbuy_p)
 
             sum_purchase_price = []
             sum_sold_list = []
@@ -1559,8 +1682,9 @@ class AdminWindow(BoxLayout):
                 _stocks['stockage'][c] = stockage[c]
                 _stocks['gpu'][c] = gpu[c]
                 _stocks['batterie'][c] = batterie[c]
-                _stocks['prix'][c] = prix[c]
-                _stocks['prix_achat'][c] = prix_achat[c]
+                _stocks['prix de vente'][c] = prix[c]
+                _stocks["cout d'achat"][c] = prix_achat[c]
+                _stocks["gain"][c] = gain[c]
                 _stocks['en_stock'][c] = en_stock[c]
                 _stocks['vendu'][c] = vendu[c]
                 _stocks['commande'][c] = commande[c]
@@ -1579,8 +1703,9 @@ class AdminWindow(BoxLayout):
             _stocks = {}
             _stocks['Ref'] = {}
             _stocks['designation'] = {}
-            _stocks['prix'] = {}
-            _stocks['prix_achat'] = {}
+            _stocks["cout d'achat"] = {}
+            _stocks['prix de vente'] = {}
+            _stocks['gain'] = {}
             _stocks['en_stock'] = {}
             _stocks['vendu'] = {}
             _stocks['commande'] = {}
@@ -1604,6 +1729,7 @@ class AdminWindow(BoxLayout):
             fournisseur = []
             dernier_achat = []
             commentaire = []
+            gain = []
 
             for product in products.find():
                 Ref.append(product['Ref'])
@@ -1645,6 +1771,18 @@ class AdminWindow(BoxLayout):
                     commentaire.append(product['commentaire'])
                 except KeyError:
                     commentaire.append('****')
+                
+                try:
+                    tbuy_p = float(product['prix_achat'])
+                except:
+                    tbuy_p = 0
+                    
+                try:
+                    tsell_p = float(product['prix'])
+                except:
+                    tsell_p = 0
+                
+                gain.append(tsell_p-tbuy_p)
 
             sum_purchase_price = []
             sum_sold_list = []
@@ -1655,8 +1793,9 @@ class AdminWindow(BoxLayout):
             for c, v in enumerate(Ref):
                 _stocks['Ref'][c] = Ref[c]
                 _stocks['designation'][c] = f"{marque[c]} {modele[c]} | {cpu[c]} | {ram[c]}GB\n{stockage[c]} | {gpu[c]} | {batterie[c]}"
-                _stocks['prix'][c] = prix[c]
-                _stocks['prix_achat'][c] = prix_achat[c]
+                _stocks['prix de vente'][c] = prix[c]
+                _stocks["cout d'achat"][c] = prix_achat[c]
+                _stocks["gain"][c] = gain[c]
                 _stocks['en_stock'][c] = en_stock[c]
                 _stocks['vendu'][c] = vendu[c]
                 _stocks['commande'][c] = commande[c]
@@ -1739,7 +1878,7 @@ class AdminWindow(BoxLayout):
         crud_stockage = TextInput(hint_text='stockage', multiline=False)
         crud_batterie = TextInput(hint_text='Batterie', multiline=False)
         crud_price = TextInput(hint_text='Prix', multiline=False)
-        crud_buy_price = TextInput(hint_text="Prix d'achat", multiline=False)
+        crud_buy_price = TextInput(hint_text="cout d'achat", multiline=False)
         exchange_rate = TextInput(hint_text="Taux de change", multiline=False)
         fees = TextInput(hint_text="Charges", multiline=False)
         crud_stock = TextInput(hint_text='En stock', multiline=False)
@@ -1840,7 +1979,7 @@ class AdminWindow(BoxLayout):
         self.products.insert_one({'Ref':ref, 'marque': marque,
                             'modele':modele, 'cpu': cpu, 'ram':ram, 'gpu':gpu, 'stockage': stockage, 'batterie':batterie, 'prix': price,
                             'prix_achat': buy_price, 'en_stock': stock, 'vendu': sold, 'commande': order, 'dernier_achat': last_purchase,
-                            'commentaire': comment, 'fournisseur': supplier})
+                            'commentaire': comment, 'fournisseur': supplier, 'charges': fee})
         
         products = self.get_products()
         usertable  = DataTable(table=products)
@@ -1904,7 +2043,7 @@ class AdminWindow(BoxLayout):
         self.crud_stockage = TextInput(hint_text='stockage', multiline=False)
         self.crud_batterie = TextInput(hint_text='Batterie', multiline=False)
         self.crud_price = TextInput(hint_text='Prix', multiline=False)
-        self.crud_buy_price = TextInput(hint_text="Prix d'achat", multiline=False)
+        self.crud_buy_price = TextInput(hint_text="cout d'achat", multiline=False)
         self.crud_exchange_rate = TextInput(hint_text="Taux de change", multiline=False)
         fee = TextInput(hint_text="Charges", multiline=False)
         self.crud_stock = TextInput(hint_text='En stock', multiline=False)
@@ -2008,7 +2147,6 @@ class AdminWindow(BoxLayout):
         self.success_popup("Produit Modifié")
         
         return 0
-    
 
     def remove_product_fields(self):
         target = self.ids.ops_fields_p
