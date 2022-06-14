@@ -532,14 +532,14 @@ class AdminWindow(BoxLayout):
                     en_stock[c] = 0
 
                 if int(vendu[c]) >= 1:
-                    sum_sold_list.append(int(vendu[c])*float(prix[c]))
+                    sum_sold_list.append((int(vendu[c])*float(prix[c]))-charges[c])
                     sold_items.append(int(vendu[c]))
-                    sum_purchase_price.append(int(vendu[c])*float(prix_achat[c]))
+                    sum_purchase_price.append((int(vendu[c])*float(prix_achat[c]))-charges[c])
 
                 if int(en_stock[c]) >= 1:
-                    in_stock_items_price.append(int(en_stock[c])*float(prix_achat[c]))
+                    in_stock_items_price.append((int(en_stock[c])*float(prix_achat[c]))-charges[c])
                     in_stock_items.append(int(en_stock[c]))
-                    sum_purchase_price.append(int(en_stock[c])*float(prix_achat[c]))
+                    sum_purchase_price.append((int(en_stock[c])*float(prix_achat[c]))-charges[c])
 
             products = _stocks
             prod_table  = DataTable(table=products)
@@ -551,23 +551,24 @@ class AdminWindow(BoxLayout):
             in_stock_items_price = sum(in_stock_items_price)
             sold_items = sum(sold_items)
             sold_products_price = float(sum(sum_sold_list))
-            profit = sold_products_price-total_order_price
+            profit = sold_products_price-total_order_price-sum(charges)
 
             totalorderpricelabel = Label(text=f'Prix Totale:\n{total_order_price} DH', bold=True, color=(0,0,0,1))
             instockitemslabel = Label(text=f'Produits en stock:\n{in_stock_items}', bold=True, color=(0,0,0,1))
             instockitemspricelabel = Label(text=f'Prix des produits en stock:\n{in_stock_items_price} DH', bold=True, color=(0,0,0,1))
             solditemslabel = Label(text=f'Produits Vendu:\n{sold_items}', bold=True, color=(0,0,0,1))
             soldproductspricelabel = Label(text=f'Prix des produits Vendu:\n{sold_products_price} DH', bold=True, color=(0,0,0,1))
-            profitlabel = Label(text=f'Profit:\n{profit} DH', bold=True, color=(0,0,0,1))
+            profitlabel = Label(text=f'Gain:\n{profit} DH', bold=True, color=(0,0,0,1))
             chargeslabel = Label(text=f'Frais:\n{sum(charges)} DH', bold=True, color=(0,0,0,1))
 
             stats.add_widget(totalorderpricelabel)
+            stats.add_widget(chargeslabel)
+            stats.add_widget(profitlabel)
             stats.add_widget(instockitemslabel)
             stats.add_widget(instockitemspricelabel)
             stats.add_widget(solditemslabel)
             stats.add_widget(soldproductspricelabel)
-            stats.add_widget(chargeslabel)
-            stats.add_widget(profitlabel)
+            
         return _stocks
 
 
@@ -879,6 +880,7 @@ class AdminWindow(BoxLayout):
             _stocks['fournisseur'] = {}
             _stocks['dernier_achat'] = {}
             _stocks['commentaire'] = {}
+            _stocks['charges'] = {}
 
             Ref = []
             prix = []
@@ -897,6 +899,7 @@ class AdminWindow(BoxLayout):
             dernier_achat = []
             commentaire = []
             gain = []
+            charges = []
 
             for product in self.products.find({"Ref": f"{orderref}"}):
                 Ref.append(product['Ref'])
@@ -923,6 +926,10 @@ class AdminWindow(BoxLayout):
                     vendu.append('')
 
                 commande.append(product['commande'])
+                try:
+                    charges.append(product['charges'])
+                except:
+                    charges.append(0)
 
                 try:    
                     fournisseur.append(product['fournisseur'])
@@ -969,6 +976,7 @@ class AdminWindow(BoxLayout):
                 _stocks['commentaire'] = commentaire[c]
                 _stocks['fournisseur'] = fournisseur[c]
                 _stocks['gain'] = gain[c]
+                _stocks['charges'] = charges[c]
 
                 if vendu[c] == '':
                     vendu[c] = 0
@@ -994,6 +1002,7 @@ class AdminWindow(BoxLayout):
         _stocks['fournisseur'] = {}
         _stocks['dernier_achat'] = {}
         _stocks['commentaire'] = {}
+        _stocks['charges'] = {}
         Ref = []
         prix = []
         prix_achat = []
@@ -1011,6 +1020,7 @@ class AdminWindow(BoxLayout):
         dernier_achat = []
         commentaire = []
         gain = []
+        charges = []
         
         for product in self.products.find({"Ref": f"{orderref}"}):
             Ref.append(product['Ref'])
@@ -1066,6 +1076,11 @@ class AdminWindow(BoxLayout):
             except:
                 tsell_p = 0
                 
+            try:
+                charges.append(product['charges'])
+            except:
+                charges.append(0)
+                
             gain.append(tsell_p-tbuy_p)
         
         for c, v in enumerate(Ref):
@@ -1080,6 +1095,7 @@ class AdminWindow(BoxLayout):
             _stocks['dernier_achat'][c] = dernier_achat[c]
             _stocks['commentaire'][c] = commentaire[c]
             _stocks['gain'][c] = gain[c]
+            _stocks['charges'] = charges[c]
         
         products = _stocks
         prod_table  = DataTable(table=products)
@@ -1258,7 +1274,6 @@ class AdminWindow(BoxLayout):
         _stocks = self.get_supp(for_export=True)
 
         titles = _stocks.keys()
-        print(titles)
         titles = list(titles)
 
         titles2 = ['Ref', 'Marque', 'Modele', 'CPU', 'RAM', 'Stockage', 'GPU', 'Batterie', 'Prix De Vente',
@@ -2008,7 +2023,6 @@ class AdminWindow(BoxLayout):
             return 0
         else:
             product = self.get_product(order=code)
-            print(product)
             if len(product['Ref']) <= 0:
                 self.error_popup("Réference Invalide")
                 return 0
@@ -2020,8 +2034,9 @@ class AdminWindow(BoxLayout):
                 self.crud_gpu.text = str(product['gpu'])
                 self.crud_stockage.text = str(product['stockage'])
                 self.crud_batterie.text = str(product['batterie'])
-                self.crud_price.text = str(product['prix'])
-                self.crud_buy_price.text = str(product['prix_achat'])
+                self.crud_price.text = str(product['prix de vente'])
+                self.crud_buy_price.text = str(float(product["cout d'achat"])-float(product["charges"]))
+                self.fee.text = str(product["charges"])
                 self.crud_stock.text = str(product['en_stock'])
                 self.crud_sold.text = str(product['vendu'])
                 self.crud_order.text = str(product['commande'])
@@ -2045,7 +2060,7 @@ class AdminWindow(BoxLayout):
         self.crud_price = TextInput(hint_text='Prix', multiline=False)
         self.crud_buy_price = TextInput(hint_text="cout d'achat", multiline=False)
         self.crud_exchange_rate = TextInput(hint_text="Taux de change", multiline=False)
-        fee = TextInput(hint_text="Charges", multiline=False)
+        self.fee = TextInput(hint_text="Charges", multiline=False)
         self.crud_stock = TextInput(hint_text='En stock', multiline=False)
         self.crud_sold = TextInput(hint_text='Vendu', multiline=False)
         self.crud_order = TextInput(hint_text='Commande', multiline=False)
@@ -2056,7 +2071,7 @@ class AdminWindow(BoxLayout):
         crud_submit_p =  Button(text='Modifier Produit', size_hint_x=1/8, width=100,# price, buy_price, exchange, stock, sold, order, supplier, last_purchase, comment)
                                 on_release=lambda x:self.update_product(crud_code.text, self.crud_marque.text, self.crud_modele.text, self.crud_cpu.text,
                                                                         self.crud_ram.text, self.crud_gpu.text, self.crud_stockage.text, self.crud_batterie.text,
-                                                                        self.crud_price.text, self.crud_buy_price.text, self.crud_exchange_rate.text, fee.text, self.crud_stock.text, self.crud_sold.text,
+                                                                        self.crud_price.text, self.crud_buy_price.text, self.crud_exchange_rate.text, self.fee.text, self.crud_stock.text, self.crud_sold.text,
                                                                         self.crud_order.text, self.crud_fournisseur.text, "OMO", self.crud_comment.text), 
                                 background_color=(0.184, 0.216, 0.231), background_normal='')
         
@@ -2072,7 +2087,7 @@ class AdminWindow(BoxLayout):
         target.add_widget(self.crud_price)
         target.add_widget(self.crud_buy_price)
         target.add_widget(self.crud_exchange_rate)
-        target.add_widget(fee)
+        target.add_widget(self.fee)
         target.add_widget(self.crud_stock)
         target.add_widget(self.crud_sold)
         target.add_widget(self.crud_order)
@@ -2123,9 +2138,9 @@ class AdminWindow(BoxLayout):
         
         
         if last_purchase == "OMO":
-            self.products.update_one({'Ref':ref}, {'$set':{'marque': marque, 'modele':modele, 'cpu': cpu, 'ram':ram, 'gpu':gpu, 'stockage': stockage, 'batterie':batterie, 'prix': price,'prix_achat': buy_price, 'en_stock': stock, 'vendu': sold, 'commande': order, 'fournisseur': supplier, 'commentaire':comment}})
+            self.products.update_one({'Ref':ref}, {'$set':{'marque': marque, 'modele':modele, 'cpu': cpu, 'ram':ram, 'gpu':gpu, 'stockage': stockage, 'batterie':batterie, 'prix': price,'prix_achat': buy_price, 'en_stock': stock, 'vendu': sold, 'commande': order, 'fournisseur': supplier, 'commentaire':comment, 'charges': fee}})
         else:
-            self.products.update_one({'Ref':ref}, {'$set':{'marque': marque, 'modele':modele, 'cpu': cpu, 'ram':ram, 'gpu':gpu, 'stockage': stockage, 'batterie':batterie, 'prix': price,'prix_achat': buy_price, 'en_stock': stock, 'vendu': sold, 'commande': order, 'fournisseur': supplier, 'dernier_achat': last_purchase, 'commentaire':comment}})
+            self.products.update_one({'Ref':ref}, {'$set':{'marque': marque, 'modele':modele, 'cpu': cpu, 'ram':ram, 'gpu':gpu, 'stockage': stockage, 'batterie':batterie, 'prix': price,'prix_achat': buy_price, 'en_stock': stock, 'vendu': sold, 'commande': order, 'fournisseur': supplier, 'dernier_achat': last_purchase, 'commentaire':comment, 'charges': fee}})
         
         products = self.get_products()
         usertable  = DataTable(table=products)
@@ -2389,7 +2404,6 @@ class AdminWindow(BoxLayout):
         
     def open_reciept(self):
         ref = self.ids.tr_id_inp.text
-        print(ref)
         if self.transaction_exist(ref):
             try:
                 os.startfile(f".\\recu\\{ref}.txt")

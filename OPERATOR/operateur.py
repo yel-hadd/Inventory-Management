@@ -48,7 +48,7 @@ class OperateurWindow(BoxLayout):
         self.transaction_id = self.gen_transaction_ref()
         self.client_id = self.gen_client_ref()
         
-    
+        
     def logout(self):
         self.parent.parent.current = "scrn_si"
           
@@ -170,15 +170,6 @@ class OperateurWindow(BoxLayout):
         if self.ids.disc_perc_inp.text == '':
             self.ids.disc_perc_inp.text == '0'
         
-        if float(self.ids.disc_inp.text) > float(self.ids.price_inp.text):
-            self.error_popup("la remise ne peut pas être\nsupérieure au prix de vente")
-            self.ids.disc_inp.focus = True
-            return 0
-        
-        if int(self.ids.disc_perc_inp.text) > 100:
-            self.error_popup("la remise ne peut pas être\nsupérieure à 100 %")
-            self.ids.disc_perc_inp.focus = True
-            return 0
         
         # check if the product exists
         try:
@@ -483,7 +474,7 @@ class OperateurWindow(BoxLayout):
                 print(f"  number: {self.transaction_id}")
                 print(f"  date: {today}")
                 print("\n")
-                print(f'customer_number: {self.client_id}')
+                print(f'customer_number: "{self.client_id}"')
                 print("\n")
                 print("to:")
                 print(f"    name: 'Raison Sociale: {self.ids.rs.text}'")
@@ -491,14 +482,16 @@ class OperateurWindow(BoxLayout):
                 print(f"    postcode: 'IF: {self.ids.idf.text}'")
                 print(f"    city: 'ICE: {self.ids.ice.text}'")
         
-                os.system(f"wsl python3 buildpdf.py --output_pdf ./factures/{self.transaction_id}.pdf")
-                os.startfile(f".\\factures\\{self.transaction_id}.pdf")
-    
+            os.system(f"wsl python3 buildpdf.py --output_pdf ./factures/{self.transaction_id}.pdf")
+            os.startfile(f".\\factures\\{self.transaction_id}.pdf")
+                
                 #os.remove('./documents/invoice/data.yml')
-        
+
         sys.stdout = original_stdout
         
         self.clear()
+        
+        print(self.parent.parent.scrn_admin)
         
         self.success_popup("Transaction Enregistré")
         

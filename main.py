@@ -16,6 +16,13 @@ class MainWindow(BoxLayout):
         self.ids.scrn_si.add_widget(self.signin_widget)
         self.ids.scrn_admin.add_widget(self.admin_widget)
         self.ids.scrn_op.add_widget(self.operator_widget)
+        
+    def refresh_screens(self):
+        self.admin_widget = AdminWindow()
+        self.operator_widget = OperateurWindow()
+        
+        self.ids.scrn_admin.add_widget(self.admin_widget)
+        self.ids.scrn_op.add_widget(self.operator_widget)
 
 class MainApp(App):
     def build(self):
